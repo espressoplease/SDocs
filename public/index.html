@@ -265,7 +265,7 @@ body.read-mode #topbar {
   --md-h-font-family:  inherit;
   --md-h-scale:        1;
   --md-h-margin-bottom: 0.4em;
-  --md-h-color:        #0F0D0C;
+  --md-h-color:        var(--md-color);
   --md-h1-size:        2.1em;
   --md-h1-color:       var(--md-h-color);
   --md-h1-margin:      0 0 0.3em;
@@ -282,7 +282,10 @@ body.read-mode #topbar {
   --md-h4-color:       var(--md-h-color);
   --md-h4-margin:      1.0em 0 0.25em;
   --md-h4-weight:      600;
-  --md-p-color:        #3C3733;
+  --md-p-color:        var(--md-color);
+  --md-list-color:     var(--md-p-color);
+  --md-list-spacing:   0.3em;
+  --md-list-indent:    1.6em;
   --md-p-line-height:  var(--md-line-height);
   --md-p-margin:       0 0 1.1em;
   --md-link-color:     #2563EB;
@@ -384,11 +387,11 @@ body.read-mode #topbar {
 }
 #rendered blockquote p { margin: 0; color: inherit; }
 #rendered ul, #rendered ol {
-  padding-left: 1.6em;
+  padding-left: var(--md-list-indent);
   margin: 0.5em 0 1.1em;
 }
-#rendered li { margin-bottom: 0.3em; }
-#rendered li::marker { color: var(--text-3); }
+#rendered li { margin-bottom: var(--md-list-spacing); color: var(--md-list-color); }
+#rendered li::marker { color: var(--md-list-color); }
 #rendered hr {
   border: none;
   border-top: 1px solid #EDE8E2;
@@ -638,6 +641,35 @@ body.read-mode #right {
   min-width: 14px;
 }
 
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1;
+  transition: color .12s, background .12s;
+  padding: 0;
+}
+.reset-btn:hover {
+  color: var(--text-2);
+  background: var(--bg-hover);
+}
+.reset-btn title { display: none; }
+
+.color-pair {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Color row: swatch + label combo */
 .color-preview {
   width: 14px;
@@ -756,7 +788,7 @@ body.read-mode #right {
         </div>
         <div class="control-row">
           <label>Text color</label>
-          <input type="color" id="ctrl-color" value="#1c1917">
+          <div class="color-pair"><input type="color" id="ctrl-color" value="#1c1917"><button class="reset-btn" id="reset-color" title="Reset to default">↺</button></div>
         </div>
       </div>
     </div>
@@ -793,7 +825,7 @@ body.read-mode #right {
             </div>
             <div class="control-row">
               <label>Color</label>
-              <input type="color" id="ctrl-h-color" value="#0f0d0c">
+              <div class="color-pair"><input type="color" id="ctrl-h-color" value="#1c1917"><button class="reset-btn" id="reset-h-color" title="Follow body text color">↺</button></div>
             </div>
           </div>
         </div>
@@ -811,7 +843,7 @@ body.read-mode #right {
             </div>
             <div class="control-row">
               <label>Color</label>
-              <input type="color" id="ctrl-h1-color" value="#0f0d0c">
+              <div class="color-pair"><input type="color" id="ctrl-h1-color" value="#1c1917"><button class="reset-btn" id="reset-h1-color" title="Follow header color">↺</button></div>
             </div>
             <div class="control-row">
               <label>Weight</label>
@@ -839,7 +871,7 @@ body.read-mode #right {
             </div>
             <div class="control-row">
               <label>Color</label>
-              <input type="color" id="ctrl-h2-color" value="#0f0d0c">
+              <div class="color-pair"><input type="color" id="ctrl-h2-color" value="#1c1917"><button class="reset-btn" id="reset-h2-color" title="Follow header color">↺</button></div>
             </div>
             <div class="control-row">
               <label>Weight</label>
@@ -866,7 +898,7 @@ body.read-mode #right {
             </div>
             <div class="control-row">
               <label>Color</label>
-              <input type="color" id="ctrl-h3-color" value="#0f0d0c">
+              <div class="color-pair"><input type="color" id="ctrl-h3-color" value="#1c1917"><button class="reset-btn" id="reset-h3-color" title="Follow header color">↺</button></div>
             </div>
             <div class="control-row">
               <label>Weight</label>
@@ -893,7 +925,7 @@ body.read-mode #right {
             </div>
             <div class="control-row">
               <label>Color</label>
-              <input type="color" id="ctrl-h4-color" value="#0f0d0c">
+              <div class="color-pair"><input type="color" id="ctrl-h4-color" value="#1c1917"><button class="reset-btn" id="reset-h4-color" title="Follow header color">↺</button></div>
             </div>
             <div class="control-row">
               <label>Weight</label>
@@ -921,7 +953,7 @@ body.read-mode #right {
       <div class="panel-body" id="body-paragraph">
         <div class="control-row">
           <label>Color</label>
-          <input type="color" id="ctrl-p-color" value="#3c3733">
+          <div class="color-pair"><input type="color" id="ctrl-p-color" value="#1c1917"><button class="reset-btn" id="reset-p-color" title="Follow body text color">↺</button></div>
         </div>
         <div class="control-row">
           <label>Line height</label>
@@ -932,6 +964,34 @@ body.read-mode #right {
           <label>Margin bottom</label>
           <input type="range" id="ctrl-p-mb-range" min="0" max="3" step="0.1" value="1.1">
           <input type="number" id="ctrl-p-mb-num" min="0" max="3" step="0.1" value="1.1">
+          <span class="unit">em</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTS -->
+    <div class="panel-section">
+      <div class="panel-header" data-target="body-lists">
+        <span class="arrow">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        Lists
+      </div>
+      <div class="panel-body" id="body-lists">
+        <div class="control-row">
+          <label>Color</label>
+          <div class="color-pair"><input type="color" id="ctrl-list-color" value="#1c1917"><button class="reset-btn" id="reset-list-color" title="Follow paragraph color">↺</button></div>
+        </div>
+        <div class="control-row">
+          <label>Item spacing</label>
+          <input type="range" id="ctrl-list-spacing-range" min="0" max="1.5" step="0.05" value="0.3">
+          <input type="number" id="ctrl-list-spacing-num" min="0" max="1.5" step="0.05" value="0.3">
+          <span class="unit">em</span>
+        </div>
+        <div class="control-row">
+          <label>Indent</label>
+          <input type="range" id="ctrl-list-indent-range" min="0.5" max="3" step="0.1" value="1.6">
+          <input type="number" id="ctrl-list-indent-num" min="0.5" max="3" step="0.1" value="1.6">
           <span class="unit">em</span>
         </div>
       </div>
@@ -1245,6 +1305,12 @@ function applyCtrl(id) {
     }
     case 'ctrl-bq-color':
       renderedEl.style.setProperty('--md-bq-color', v); break;
+    case 'ctrl-list-color':
+      renderedEl.style.setProperty('--md-list-color', v); break;
+    case 'ctrl-list-spacing-num':
+      renderedEl.style.setProperty('--md-list-spacing', v + 'em'); break;
+    case 'ctrl-list-indent-num':
+      renderedEl.style.setProperty('--md-list-indent', v + 'em'); break;
   }
 }
 
@@ -1266,7 +1332,9 @@ function linkRangeNum(rangeId, numId) {
   ['ctrl-h4-size-range',    'ctrl-h4-size-num'],
   ['ctrl-p-lh-range',       'ctrl-p-lh-num'],
   ['ctrl-p-mb-range',       'ctrl-p-mb-num'],
-  ['ctrl-bq-bw-range',      'ctrl-bq-bw-num'],
+  ['ctrl-bq-bw-range',          'ctrl-bq-bw-num'],
+  ['ctrl-list-spacing-range',   'ctrl-list-spacing-num'],
+  ['ctrl-list-indent-range',    'ctrl-list-indent-num'],
 ].forEach(([r,n]) => linkRangeNum(r,n));
 
 [
@@ -1279,10 +1347,41 @@ function linkRangeNum(rangeId, numId) {
   'ctrl-p-color','ctrl-link-color','ctrl-link-decoration',
   'ctrl-code-font','ctrl-code-bg','ctrl-code-color',
   'ctrl-bq-border-color','ctrl-bq-color',
+  'ctrl-list-color',
 ].forEach(id => {
   document.getElementById(id).addEventListener('input',  () => applyCtrl(id));
   document.getElementById(id).addEventListener('change', () => applyCtrl(id));
 });
+
+// ═══════════════════════════════════════════════════════
+//  RESET BUTTONS
+// ═══════════════════════════════════════════════════════
+// Remove a CSS var override and sync the color control to the inherited value.
+// parentCtrlId is the control whose current value we show after reset
+// (the colour this element will now inherit from).
+function wireReset(btnId, cssVar, getParentColor) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  // derive the ctrl id from the btn id: "reset-foo" → "ctrl-foo"
+  const ctrlId = btnId.replace('reset-', 'ctrl-');
+  btn.addEventListener('click', () => {
+    renderedEl.style.removeProperty(cssVar);
+    const inherited = getParentColor();
+    const ctrl = document.getElementById(ctrlId);
+    if (ctrl) ctrl.value = inherited;
+  });
+}
+
+// Cascade: --md-color → --md-h-color → --md-h[1-4]-color
+//          --md-color → --md-p-color → --md-list-color
+wireReset('reset-color',      '--md-color',      () => '#1c1917');
+wireReset('reset-h-color',    '--md-h-color',    () => gv('ctrl-color')  || '#1c1917');
+wireReset('reset-h1-color',   '--md-h1-color',   () => gv('ctrl-h-color') || gv('ctrl-color') || '#1c1917');
+wireReset('reset-h2-color',   '--md-h2-color',   () => gv('ctrl-h-color') || gv('ctrl-color') || '#1c1917');
+wireReset('reset-h3-color',   '--md-h3-color',   () => gv('ctrl-h-color') || gv('ctrl-color') || '#1c1917');
+wireReset('reset-h4-color',   '--md-h4-color',   () => gv('ctrl-h-color') || gv('ctrl-color') || '#1c1917');
+wireReset('reset-p-color',    '--md-p-color',    () => gv('ctrl-color')  || '#1c1917');
+wireReset('reset-list-color', '--md-list-color', () => gv('ctrl-p-color') || gv('ctrl-color') || '#1c1917');
 
 // ═══════════════════════════════════════════════════════
 //  APPLY STYLES FROM META → CONTROLS
