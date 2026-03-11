@@ -1815,7 +1815,23 @@ Visit [Markdown Guide](https://www.markdownguide.org) for syntax reference.
 // Prime all color CSS vars and pickers from the cascade default
 setColorValue('ctrl-color', COLOR_DEFAULT, false);
 
-loadText(DEFAULT_MD);
+// ── URL hash content loading (#md=<base64>) ───────────────
+(function () {
+  const hash = window.location.hash;
+  if (hash.startsWith('#md=')) {
+    try {
+      const encoded = decodeURIComponent(hash.slice(4));
+      const text = atob(encoded);
+      loadText(text, 'document.md');
+      // Clean hash from URL bar without triggering reload
+      history.replaceState(null, '', window.location.pathname);
+      return;
+    } catch (e) {
+      console.warn('mdstudio: could not decode #md hash', e);
+    }
+  }
+  loadText(DEFAULT_MD);
+}());
 </script>
 </body>
 </html>

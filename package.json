@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Lightweight stateless markdown editor with styling",
   "main": "server.js",
+  "bin": {
+    "mdstudio": "./bin/mdstudio.js"
+  },
   "scripts": {
     "start": "node server.js",
     "test": "node test/run.js"
