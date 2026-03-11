@@ -148,6 +148,14 @@ body.read-mode #topbar {
   color: var(--text);
 }
 
+.topbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
 /* ═══════════════════════════════════════════════════
    MAIN LAYOUT
 ═══════════════════════════════════════════════════ */
@@ -679,11 +687,20 @@ body.read-mode #right {
   </div>
   <button class="btn ghost" id="btn-export-raw" title="Export as plain .md (no styles)">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10h9M6.5 2v6M4 6l2.5 2.5L9 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Export .md
+    .md
   </button>
-  <button class="btn" id="btn-export-styled" title="Export as .md with YAML front matter styles">
+  <button class="btn ghost" id="btn-export-styled" title="Export as .md with YAML front matter styles">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10h9M6.5 2v6M4 6l2.5 2.5L9 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Export Styled .md
+    Styled .md
+  </button>
+  <div class="topbar-sep"></div>
+  <button class="btn ghost" id="btn-export-pdf" title="Export as PDF">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="2" y="1" width="7" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M5 1v3h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 8h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="1.5 1.5"/><path d="M4 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    PDF
+  </button>
+  <button class="btn ghost" id="btn-export-word" title="Export as Word .docx">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="2" y="1" width="7" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M5 1v3h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6.5l1 3 1.5-2 1.5 2 1-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Word
   </button>
 </div>
 
@@ -1451,6 +1468,162 @@ document.querySelectorAll('.sub-header').forEach(h => {
 });
 
 // ═══════════════════════════════════════════════════════
+//  EXPORT — PDF + WORD helpers
+// ═══════════════════════════════════════════════════════
+
+// Read a CSS custom property from the rendered element (live value, user overrides included)
+function cv(name) {
+  return (renderedEl.style.getPropertyValue(name) ||
+          getComputedStyle(renderedEl).getPropertyValue(name)).trim();
+}
+
+function buildExportCSS() {
+  const fontFamily    = cv('--md-font-family')    || "'Inter', sans-serif";
+  const baseSize      = cv('--md-base-size')      || '16px';
+  const lineHeight    = cv('--md-line-height')    || '1.75';
+  const color         = cv('--md-color')          || '#1c1917';
+
+  const hFontFamily   = cv('--md-h-font-family')  || 'inherit';
+  const hScale        = parseFloat(cv('--md-h-scale') || '1');
+  const hMB           = cv('--md-h-margin-bottom')|| '0.4em';
+  const hColor        = cv('--md-h-color')        || '#0f0d0c';
+
+  const h1Size    = `calc(${cv('--md-h1-size')    || '2.1em'} * ${hScale})`;
+  const h1Color   = cv('--md-h1-color')   || hColor;
+  const h1Weight  = cv('--md-h1-weight')  || '700';
+  const h2Size    = `calc(${cv('--md-h2-size')    || '1.55em'} * ${hScale})`;
+  const h2Color   = cv('--md-h2-color')   || hColor;
+  const h2Weight  = cv('--md-h2-weight')  || '600';
+  const h3Size    = `calc(${cv('--md-h3-size')    || '1.2em'} * ${hScale})`;
+  const h3Color   = cv('--md-h3-color')   || hColor;
+  const h3Weight  = cv('--md-h3-weight')  || '600';
+  const h4Size    = `calc(${cv('--md-h4-size')    || '1.0em'} * ${hScale})`;
+  const h4Color   = cv('--md-h4-color')   || hColor;
+  const h4Weight  = cv('--md-h4-weight')  || '600';
+
+  const pColor    = cv('--md-p-color')     || '#3c3733';
+  const pLH       = cv('--md-p-line-height')|| lineHeight;
+  const pMargin   = cv('--md-p-margin')    || '0 0 1.1em';
+
+  const linkColor = cv('--md-link-color')  || '#2563eb';
+  const linkDec   = cv('--md-link-decoration') || 'underline';
+
+  const codeBG    = cv('--md-code-bg')     || '#f4f1ed';
+  const codeColor = cv('--md-code-color')  || '#6b21a8';
+  const codeFont  = cv('--md-code-font')   || "'JetBrains Mono', monospace";
+  const preBG     = cv('--md-pre-bg')      || codeBG;
+
+  const bqBorder  = cv('--md-bq-border')   || '3px solid #2563eb';
+  const bqColor   = cv('--md-bq-color')    || '#6b6560';
+  const bqPad     = cv('--md-bq-padding')  || '0.5em 1em';
+  const bqMargin  = cv('--md-bq-margin')   || '1.2em 0';
+
+  return `
+body {
+  font-family: ${fontFamily};
+  font-size: ${baseSize};
+  color: ${color};
+  line-height: ${lineHeight};
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 48px 60px;
+  -webkit-font-smoothing: antialiased;
+}
+h1 { font-family: ${hFontFamily}; font-size: ${h1Size}; color: ${h1Color}; font-weight: ${h1Weight}; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 ${hMB}; }
+h2 { font-family: ${hFontFamily}; font-size: ${h2Size}; color: ${h2Color}; font-weight: ${h2Weight}; letter-spacing: -0.015em; line-height: 1.3; margin: 1.4em 0 ${hMB}; padding-bottom: 0.3em; border-bottom: 1px solid #ede8e2; }
+h3 { font-family: ${hFontFamily}; font-size: ${h3Size}; color: ${h3Color}; font-weight: ${h3Weight}; letter-spacing: -0.01em; line-height: 1.4; margin: 1.2em 0 ${hMB}; }
+h4 { font-family: ${hFontFamily}; font-size: ${h4Size}; color: ${h4Color}; font-weight: ${h4Weight}; line-height: 1.5; margin: 1em 0 ${hMB}; }
+p  { color: ${pColor}; line-height: ${pLH}; margin: ${pMargin}; }
+a  { color: ${linkColor}; text-decoration: ${linkDec}; text-underline-offset: 2px; }
+code { background: ${codeBG}; color: ${codeColor}; padding: 0.15em 0.45em; border-radius: 4px; font-family: ${codeFont}; font-size: 0.85em; }
+pre  { background: ${preBG}; padding: 1.1em 1.25em; border-radius: 8px; overflow-x: auto; margin: 1.2em 0; border: 1px solid #e7e2db; }
+pre code { background: none; padding: 0; color: #3c3733; font-size: 0.88em; }
+blockquote { border-left: ${bqBorder}; color: ${bqColor}; padding: ${bqPad}; margin: ${bqMargin}; background: #f7f5f2; border-radius: 0 6px 6px 0; }
+blockquote p { margin: 0; color: inherit; }
+ul, ol { padding-left: 1.6em; margin: 0.5em 0 1.1em; }
+li { margin-bottom: 0.3em; }
+hr { border: none; border-top: 1px solid #ede8e2; margin: 2em 0; }
+table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: 0.92em; }
+th, td { border: 1px solid #e2ddd6; padding: 7px 12px; text-align: left; }
+th { background: #f4f1ed; font-weight: 600; }
+tr:nth-child(even) td { background: #fafaf8; }
+img { max-width: 100%; border-radius: 8px; }
+`;
+}
+
+function buildExportHTML() {
+  const fontName = gv('ctrl-font-family').replace(/['"]/g,'').split(',')[0].trim();
+  const fontLink = GOOGLE_FONTS.includes(fontName)
+    ? `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap">`
+    : '';
+  const title = (currentMeta.title || 'Document').replace(/</g,'&lt;');
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+${fontLink}
+<style>${buildExportCSS()}</style>
+</head>
+<body>
+${renderedEl.innerHTML}
+</body>
+</html>`;
+}
+
+// ── PDF via browser print ──────────────────────────
+function exportPDF() {
+  setStatus('Opening print dialog…');
+  const html = buildExportHTML();
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.open();
+  win.document.write(html + `<script>
+    // Wait for fonts then print
+    document.fonts.ready.then(() => {
+      window.focus();
+      window.print();
+    });
+  <\/script>`);
+  win.document.close();
+  setStatus('PDF print dialog opened');
+}
+
+// ── Word (.docx) via html-docx-js ─────────────────
+let htmlDocxLoaded = false;
+
+function loadHtmlDocx() {
+  return new Promise((resolve, reject) => {
+    if (htmlDocxLoaded) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js';
+    s.onload = () => { htmlDocxLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error('Could not load html-docx-js'));
+    document.head.appendChild(s);
+  });
+}
+
+async function exportWord() {
+  setStatus('Generating Word document…');
+  try {
+    await loadHtmlDocx();
+    const html = buildExportHTML();
+    const blob = window.htmlDocx.asBlob(html, {
+      orientation: 'portrait',
+      margins: { top: 720, right: 900, bottom: 720, left: 900 }, // twips (720 = 0.5in)
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (currentMeta.title || 'document').replace(/[^a-z0-9_-]/gi,'_') + '.docx';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('Exported Word .docx');
+  } catch (e) {
+    setStatus('Word export failed: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 //  EXPORT
 // ═══════════════════════════════════════════════════════
 function download(filename, content) {
@@ -1472,6 +1645,9 @@ document.getElementById('btn-export-styled').addEventListener('click', () => {
   download('document.md', fm + '\n' + currentBody);
   setStatus('Exported styled .md with YAML front matter');
 });
+
+document.getElementById('btn-export-pdf').addEventListener('click', exportPDF);
+document.getElementById('btn-export-word').addEventListener('click', exportWord);
 
 // ═══════════════════════════════════════════════════════
 //  DEFAULT CONTENT
