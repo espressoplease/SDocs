@@ -24,17 +24,18 @@ with live styling controls and export to PDF / Word / raw .md.
 
 USAGE
   mdstudio [file]              Open a .md file
-  mdstudio [file] --mode read  Open directly in read mode (hides editor + controls)
-  mdstudio [file] --mode raw   Open showing raw markdown source
+  mdstudio [file] --mode read   Open directly in read mode (hides editor + controls)
+  mdstudio [file] --mode style  Open with styling panel visible
+  mdstudio [file] --mode raw    Open showing raw markdown source
   cat file.md | mdstudio       Pipe markdown from stdin
   mdstudio                     Open with empty editor
   mdstudio --help              Show this help
   mdstudio --schema            Print the full styles schema (for LLMs)
 
 MODES
-  read      (default when file given) Clean reading view — hides toolbar and styling panel
-  rendered  Styled preview with editor controls visible
-  raw       Shows raw markdown source
+  read   (default when file given) Clean reading view — hides toolbar and styling panel
+  style  Styled preview with editor + styling panel visible
+  raw    Shows raw markdown source
 
 STYLED MARKDOWN FORMAT
   Markdown Studio extends standard .md files with an optional YAML
@@ -161,8 +162,8 @@ function parseArgs() {
     if (args[i] === '--schema')                    { console.log(SCHEMA); process.exit(0); }
     if (args[i] === '--mode' || args[i] === '-m') {
       mode = args[++i];
-      if (!['read', 'rendered', 'raw'].includes(mode)) {
-        console.error(`mdstudio: unknown mode "${mode}" — use read, rendered, or raw`);
+      if (!['read', 'style', 'raw'].includes(mode)) {
+        console.error(`mdstudio: unknown mode "${mode}" — use read, style, or raw`);
         process.exit(1);
       }
     } else if (!file) {
@@ -254,7 +255,7 @@ function openBrowser(url) {
   let url = BASE_URL;
   const params = new URLSearchParams();
   if (content) params.set('md', encodeURIComponent(Buffer.from(content, 'utf-8').toString('base64')));
-  const effectiveMode = mode || (content ? 'read' : null);
+  const effectiveMode = mode || (content ? 'read' : 'style');
   if (effectiveMode) params.set('mode', effectiveMode);
   if (params.toString()) url = `${BASE_URL}/#${params.toString()}`;
 

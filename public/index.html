@@ -739,7 +739,7 @@ body.read-mode #right {
     <div id="left-toolbar">
       <div class="toggle-group">
         <button class="btn" id="btn-read">Read</button>
-        <button class="btn active" id="btn-rendered">Rendered</button>
+        <button class="btn active" id="btn-style">Style</button>
         <button class="btn" id="btn-raw">Raw</button>
       </div>
       <span id="drop-hint">
@@ -1542,7 +1542,7 @@ contentArea.addEventListener('drop', e => {
 //  TOGGLE RENDERED / RAW
 // ═══════════════════════════════════════════════════════
 function setMode(mode) {
-  // Sync raw→rendered if leaving raw
+  // Sync raw→style if leaving raw
   if (mode !== 'raw') {
     const { meta, body } = parseFrontMatter(rawEl.value);
     currentMeta = meta; currentBody = body;
@@ -1552,16 +1552,16 @@ function setMode(mode) {
   renderedEl.style.display = mode === 'raw' ? 'none' : '';
   rawEl.style.display      = mode === 'raw' ? 'block' : 'none';
 
-  document.getElementById('btn-read').classList.toggle('active',     mode === 'read');
-  document.getElementById('btn-rendered').classList.toggle('active', mode === 'rendered');
-  document.getElementById('btn-raw').classList.toggle('active',      mode === 'raw');
+  document.getElementById('btn-read').classList.toggle('active',  mode === 'read');
+  document.getElementById('btn-style').classList.toggle('active', mode === 'style');
+  document.getElementById('btn-raw').classList.toggle('active',   mode === 'raw');
 
   document.body.classList.toggle('read-mode', mode === 'read');
 }
 
-document.getElementById('btn-read').addEventListener('click',     () => setMode('read'));
-document.getElementById('btn-rendered').addEventListener('click', () => setMode('rendered'));
-document.getElementById('btn-raw').addEventListener('click',      () => setMode('raw'));
+document.getElementById('btn-read').addEventListener('click',  () => setMode('read'));
+document.getElementById('btn-style').addEventListener('click', () => setMode('style'));
+document.getElementById('btn-raw').addEventListener('click',   () => setMode('raw'));
 
 // ═══════════════════════════════════════════════════════
 //  COLLAPSIBLES
@@ -1830,7 +1830,7 @@ setColorValue('ctrl-color', COLOR_DEFAULT, false);
       console.warn('mdstudio: could not decode #md hash', e);
     }
   }
-  if (modeParam && ['read', 'rendered', 'raw'].includes(modeParam)) {
+  if (modeParam && ['read', 'style', 'raw'].includes(modeParam)) {
     setMode(modeParam);
   }
   if (mdParam || modeParam) {
