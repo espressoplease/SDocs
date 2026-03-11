@@ -32,8 +32,8 @@ USAGE
   mdstudio --schema            Print the full styles schema (for LLMs)
 
 MODES
-  rendered  (default) Styled preview with editor controls visible
-  read      Clean reading view — hides toolbar and styling panel
+  read      (default when file given) Clean reading view — hides toolbar and styling panel
+  rendered  Styled preview with editor controls visible
   raw       Shows raw markdown source
 
 STYLED MARKDOWN FORMAT
@@ -254,7 +254,8 @@ function openBrowser(url) {
   let url = BASE_URL;
   const params = new URLSearchParams();
   if (content) params.set('md', encodeURIComponent(Buffer.from(content, 'utf-8').toString('base64')));
-  if (mode)    params.set('mode', mode);
+  const effectiveMode = mode || (content ? 'read' : null);
+  if (effectiveMode) params.set('mode', effectiveMode);
   if (params.toString()) url = `${BASE_URL}/#${params.toString()}`;
 
   const running = await isServerRunning();
