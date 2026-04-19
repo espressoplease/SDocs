@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-04-19T07:15:50.436Z",
+  "checkedAt": "2026-04-19T08:14:34.140Z",
   "base": "https://sdocs.dev",
   "result": "error",
   "error": "Could not read /trust/manifest from server: HTTP 404 for https://sdocs.dev/trust/manifest"
