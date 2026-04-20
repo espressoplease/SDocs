@@ -69,6 +69,9 @@ self.addEventListener('fetch', function (e) {
   // the server responds with no-store headers anyway, don't shadow it).
   if (url.pathname === '/api/short' || url.pathname.indexOf('/api/short/') === 0) return;
 
+  // Shape playground is a dev tool that iterates quickly; never cache it.
+  if (url.pathname === '/shapes') return;
+
   // Google Fonts: cache-first (they're immutable)
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(
