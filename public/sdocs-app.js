@@ -217,6 +217,7 @@ function render() {
   attachCodeCopyButtons(S.renderedEl);
   buildCollapsibleSections(S.renderedEl);
   S.processCharts(S.renderedEl);
+  if (window.SDocSlides) window.SDocSlides.processSlides(S.renderedEl);
   renderFileInfoCard();
 }
 
