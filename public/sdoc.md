@@ -51,6 +51,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -80,6 +82,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -109,6 +113,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -139,6 +145,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -574,6 +582,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -598,6 +608,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -622,6 +634,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -647,6 +661,8 @@ The `sdoc` CLI is installed globally:
 - `sdoc share file.md` — copy shareable URL to clipboard.
 - `sdoc schema` — how to adjust all stylable properties (fonts, colors, spacing).
 - `sdoc charts` — chart types, JSON format, and styling. Charts render via Chart.js from ```chart code blocks.
+- `sdoc slides` — slide DSL reference (grids, shapes, content). Slides render from ```slide or ~~~slide blocks.
+- `sdoc present file.md` — open file directly in fullscreen presentation mode.
 - `sdoc --help` — full usage.
 
 Source: https://github.com/espressoplease/SDocs

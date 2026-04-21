@@ -53,6 +53,8 @@ The \`sdoc\` CLI is installed globally:
 - \`sdoc share file.md\` — copy shareable URL to clipboard.
 - \`sdoc schema\` — how to adjust all stylable properties (fonts, colors, spacing).
 - \`sdoc charts\` — chart types, JSON format, and styling. Charts render via Chart.js from \`\`\`chart code blocks.
+- \`sdoc slides\` — slide DSL reference (grids, shapes, content). Slides render from \`\`\`slide or ~~~slide blocks.
+- \`sdoc present file.md\` — open file directly in fullscreen presentation mode.
 - \`sdoc --help\` — full usage.
 
 Source: https://github.com/espressoplease/SDocs
@@ -245,6 +247,8 @@ USAGE
   sdoc share <file> --section "X"  Link with section anchor
   sdoc schema                      Print the full styles schema
   sdoc charts                      Chart types, options, and styling guide
+  sdoc slides                      Slide DSL reference (grids, shapes, content)
+  sdoc present <file>              Open file and jump straight into fullscreen slides
   sdoc defaults                    Show ~/.sdocs/styles.yaml
   sdoc defaults --reset            Remove default styles
   sdoc setup                       Wire SDocs into your coding agents
@@ -650,6 +654,84 @@ MIXED CHART EXAMPLE (dual y-axis)
   \`\`\`
 `;
 
+const SLIDES_HELP = `
+SDocs — Slides
+==============
+Embed presentation slides in any markdown document using fenced
+slide blocks. Slides render as thumbnails inline; click one to enter
+fullscreen presentation mode. Esc to exit, arrows to navigate.
+
+OPEN DIRECTLY IN PRESENTATION MODE
+  sdoc present <file>              Open file in fullscreen slide view
+  sdoc <file>                      Open normally (click a slide to present)
+
+BASIC SYNTAX
+  Wrap shape DSL in a \`\`\`slide or ~~~slide fenced block:
+
+  ~~~slide
+  grid 100 56.25
+  r 5 5 90 15 fill=#1e40af color=#fff | # Q4 Review
+  r 5 22 42 26 color=#1e293b |
+    ## Wins
+    - Shipped slides
+    - Tilde fences
+  r 53 22 42 26 color=#1e293b |
+    ## Next
+    - Topbar parity
+    - Font cap
+  ~~~
+
+  Prefer ~~~slide over \`\`\`slide — it lets you nest \`\`\` code
+  blocks inside shapes without closing the outer fence early.
+
+GRID
+  First line: \`grid W H\` in arbitrary units. Default 100 56.25 (16:9).
+  All shape coordinates are in grid units; a shape with \`y+h > H\`
+  will be flagged at render time with an "outside grid" error.
+
+SHAPES
+  r x y w h        rectangle  (holds markdown content)
+  c cx cy r        circle
+  e cx cy rx ry    ellipse
+  l x1 y1 x2 y2    line       (decorative)
+  a x1 y1 x2 y2    arrow      (decorative, head at endpoint)
+  p x1,y1 x2,y2..  polygon    (use ~ between points for a curved segment)
+
+IDS AND REFERENCES
+  Declare an id with \`#name\` after the shape attributes:
+    r 10 10 30 20 #title | # Main Point
+    r 60 10 30 20 #detail | Supporting detail
+    a @title @detail
+  \`@id\` resolves to the shape's center. Edge anchors: \`.top\`,
+  \`.right\`, \`.topleft\`, \`.bottomright\`, etc. — 9 anchors in total.
+
+ATTRIBUTES (between geometry and content)
+  fill=<color>       Shape fill
+  stroke=<color>     Outline color
+  strokeWidth=N      Outline width (grid units)
+  radius=N           Corner radius (rectangles)
+  color=<color>      Text color inside the shape
+  align=<a>          Horizontal: left (default), center, right
+  valign=<v>         Vertical: center (default), top, bottom
+  padding=N          Inner padding in grid units (0 disables)
+  maxfont=Npx        Cap autofit at N pixels (overrides 12%-stage default)
+
+CONTENT
+  Everything after \`|\` is standard markdown: headings, bold/italic,
+  lists, code, blockquotes, links. Multi-line content uses
+  indentation under the shape line.
+
+AUTO-FIT
+  Font size auto-fits each shape's content. By default, capped at
+  12% of stage height so single-word shapes don't balloon. Use
+  \`maxfont=Npx\` for hero-size text.
+
+STYLE INHERITANCE
+  Slides embedded in an SDocs document pick up the document's
+  font-family and heading font. A shape's own \`color=\` wins over
+  any inherited heading color.
+`;
+
 // ── Compression (brotli + base64url) ─────────────────
 
 function toBase64Url(buf) {
@@ -965,7 +1047,7 @@ async function runSafe(opts) {
 
 // ── Parse args ────────────────────────────────────────────
 
-const SUBCOMMANDS = new Set(['new', 'share', 'schema', 'defaults', 'help', 'charts', 'setup', 'safe']);
+const SUBCOMMANDS = new Set(['new', 'share', 'schema', 'defaults', 'help', 'charts', 'setup', 'safe', 'present', 'slides']);
 
 function parseArgs(argv) {
   const args = argv || process.argv.slice(2);
@@ -1075,6 +1157,10 @@ function buildUrl(content, opts) {
 
   if (opts.section) {
     params.set('sec', slugify(opts.section));
+  }
+
+  if (opts.present) {
+    params.set('present', '0');
   }
 
   const qs = params.toString();
@@ -1206,6 +1292,7 @@ if (require.main === module) {
     if (opts.subcommand === 'help')   { console.log(HELP);   process.exit(0); }
     if (opts.subcommand === 'schema') { console.log(SCHEMA); process.exit(0); }
     if (opts.subcommand === 'charts') { console.log(CHARTS_HELP); process.exit(0); }
+    if (opts.subcommand === 'slides') { console.log(SLIDES_HELP); process.exit(0); }
     if (opts.subcommand === 'setup')  { await runSetup({ force: true }); process.exit(0); }
     if (opts.subcommand === 'safe')   { await runSafe(opts); return; }
     if (opts.subcommand === 'defaults') {
@@ -1283,6 +1370,7 @@ if (require.main === module) {
         defaultStyles: !content ? defaults : null,
         section: opts.section,
         local: local,
+        present: opts.subcommand === 'present',
       });
     }
 
