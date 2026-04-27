@@ -209,6 +209,19 @@ function buildCollapsibleSections(container) {
 
 function render() {
   S.destroyCharts();
+  // Before stomping innerHTML, remember which collapsible sections the
+  // user had expanded so we can re-open them after rebuild. Keyed by the
+  // heading's slugified id, which is stable across renders of the same
+  // body. Use a descendant query for the heading because comment mode
+  // wraps headings in a `.sdoc-block-host` div (which our :scope-scoped
+  // query would otherwise miss).
+  var openIds = [];
+  S.renderedEl.querySelectorAll('.md-section').forEach(function (sec) {
+    var body = sec.querySelector(':scope > .md-section-body');
+    if (!body || !body.classList.contains('open')) return;
+    var heading = sec.querySelector('h2, h3, h4');
+    if (heading && heading.id) openIds.push(heading.id);
+  });
   var oldSpacer = S.renderedEl.querySelector('.sec-scroll-spacer');
   if (oldSpacer) oldSpacer.remove();
   S.renderedEl.innerHTML = DOMPurify.sanitize(marked.parse(S.currentBody), { FORBID_ATTR: ['style'] });
@@ -216,9 +229,21 @@ function render() {
   attachHeadingAnchors(S.renderedEl);
   attachCodeCopyButtons(S.renderedEl);
   buildCollapsibleSections(S.renderedEl);
+  // Re-expand sections that were open before this render.
+  openIds.forEach(function (id) {
+    var heading = S.renderedEl.querySelector('#' + CSS.escape(id));
+    if (!heading) return;
+    var section = heading.closest('.md-section');
+    if (!section) return;
+    var body = section.querySelector(':scope > .md-section-body');
+    var toggle = heading.querySelector('.section-toggle');
+    if (body) body.classList.add('open');
+    if (toggle) toggle.classList.add('open');
+  });
   S.processCharts(S.renderedEl);
   if (S.processMath) S.processMath(S.renderedEl);
   renderFileInfoCard();
+  if (S.commentsUi && S.commentsUi.onHostRender) S.commentsUi.onHostRender();
 }
 
 // ── File-info card ─────────────────────────────────────────
@@ -403,6 +428,21 @@ function loadText(text, filename) {
   var parsed = SDocYaml.parseFrontMatter(text);
   S.currentMeta = parsed.meta;
   S.currentBody = parsed.body;
+  // Lift footnote-format comments out of the body and merge into meta.comments.
+  // This makes markdown-footnote authoring (the easier path for agents) a
+  // valid input format alongside the YAML form. Body markers win on id
+  // collision since they represent a more recent edit by the agent.
+  if (window.SDocComments && window.SDocComments.parseFootnotes) {
+    var fn = window.SDocComments.parseFootnotes(S.currentBody);
+    if (fn.comments.length) {
+      var existing = (S.currentMeta.comments || []).filter(function (c) {
+        return !fn.comments.some(function (n) { return n.id === c.id; });
+      });
+      var merged = existing.concat(fn.comments).map(window.SDocComments.normalizeComment);
+      S.currentMeta = Object.assign({}, S.currentMeta, { comments: merged });
+      S.currentBody = fn.body;
+    }
+  }
   S.chartStyles = (parsed.meta.styles && parsed.meta.styles.chart) || null;
   render();
   if (parsed.meta.styles) S.applyStylesFromMeta(parsed.meta.styles);
@@ -654,6 +694,15 @@ function syncAll(source) {
       S.currentMeta = Object.assign({}, S.currentMeta, { styles: S.collectStyles() });
       S.rawEl.value = SDocYaml.serializeFrontMatter(S.currentMeta) + '\n' + S.currentBody;
       updateHash();
+    } else if (source === 'comment') {
+      // Comment mode: currentBody changed (comment added/removed). Re-render
+      // the markdown (which triggers comments.onHostRender to rebuild overlays)
+      // and refresh the hash so the new comment survives reload.
+      S._isDefaultState = false;
+      S.currentMeta = Object.assign({}, S.currentMeta, { styles: S.collectStyles() });
+      S.rawEl.value = SDocYaml.serializeFrontMatter(S.currentMeta) + '\n' + S.currentBody;
+      render();
+      updateHash();
     }
   } finally {
     S._syncing = false;
@@ -704,22 +753,27 @@ function setMode(mode, skipHash) {
   S.renderedEl.style.display = (mode === 'raw' || mode === 'write') ? 'none' : '';
   S.rawEl.style.display      = mode === 'raw' ? 'block' : 'none';
 
-  document.getElementById('_sd_btn-read').classList.toggle('active',   mode === 'read');
-  document.getElementById('_sd_btn-style').classList.toggle('active',  mode === 'style');
-  document.getElementById('_sd_btn-write').classList.toggle('active',  mode === 'write');
-  document.getElementById('_sd_btn-raw').classList.toggle('active',    mode === 'raw');
-  document.getElementById('_sd_btn-export').classList.toggle('active', mode === 'export');
-  document.getElementById('_sd_btn-info').classList.toggle('active',   mode === 'info');
+  document.getElementById('_sd_btn-read').classList.toggle('active',    mode === 'read');
+  document.getElementById('_sd_btn-style').classList.toggle('active',   mode === 'style');
+  document.getElementById('_sd_btn-write').classList.toggle('active',   mode === 'write');
+  document.getElementById('_sd_btn-raw').classList.toggle('active',     mode === 'raw');
+  document.getElementById('_sd_btn-export').classList.toggle('active',  mode === 'export');
+  document.getElementById('_sd_btn-info').classList.toggle('active',    mode === 'info');
+  document.getElementById('_sd_btn-comment').classList.toggle('active', mode === 'comment');
 
-  document.body.classList.toggle('style-mode',  mode === 'style');
-  document.body.classList.toggle('read-mode',   mode === 'read');
-  document.body.classList.toggle('write-mode',  mode === 'write');
-  document.body.classList.toggle('raw-mode',    mode === 'raw');
-  document.body.classList.toggle('export-mode', mode === 'export');
-  document.body.classList.toggle('info-mode',   mode === 'info');
+  document.body.classList.toggle('style-mode',   mode === 'style');
+  document.body.classList.toggle('read-mode',    mode === 'read');
+  document.body.classList.toggle('write-mode',   mode === 'write');
+  document.body.classList.toggle('raw-mode',     mode === 'raw');
+  document.body.classList.toggle('export-mode',  mode === 'export');
+  document.body.classList.toggle('info-mode',    mode === 'info');
+  document.body.classList.toggle('comment-mode', mode === 'comment');
   document.body.classList.remove('mobile-sheet-open');
   document.body.classList.remove('mobile-export-open');
   document.body.classList.remove('mobile-info-open');
+
+  if (prev === 'comment' && mode !== 'comment' && S.commentsUi) S.commentsUi.exit();
+  if (mode === 'comment' && S.commentsUi) S.commentsUi.enter();
 
   // Enter write mode — populate contentEditable
   if (mode === 'write') {
@@ -745,6 +799,7 @@ document.getElementById('_sd_btn-info').addEventListener('click', function() {
   setMode('info');
   if (S.markInfoSeen) S.markInfoSeen();
 });
+document.getElementById('_sd_btn-comment').addEventListener('click', function() { setMode('comment'); });
 
 document.getElementById('_sd_btn-new').addEventListener('click', function() {
   history.replaceState(null, '', '/new');
@@ -932,7 +987,7 @@ async function loadFromHash() {
     }
   }
 
-  if (modeParam && ['read', 'style', 'write', 'raw', 'export'].includes(modeParam)) {
+  if (modeParam && ['read', 'style', 'write', 'raw', 'export', 'info', 'comment'].includes(modeParam)) {
     setMode(modeParam, true);
   } else {
     setMode('read', true);
@@ -1013,7 +1068,7 @@ async function initShortLink(id) {
     // real edit, updateHash runs again and normalizes the URL to / + #md=.
     clearTimeout(S._hashTimer);
     var modeParam = params.get('mode');
-    if (modeParam && ['read', 'style', 'write', 'raw', 'export'].indexOf(modeParam) >= 0) {
+    if (modeParam && ['read', 'style', 'write', 'raw', 'export', 'info', 'comment'].indexOf(modeParam) >= 0) {
       setMode(modeParam, true);
     } else {
       setMode('read', true);
