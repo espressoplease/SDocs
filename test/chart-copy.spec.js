@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
 
 const CHART = [
   '# Chart copy',
@@ -76,6 +77,9 @@ test('chart JSON copy writes the current source and uses tick feedback', async (
 
 test('chart PNG copy writes the rendered canvas and uses tick feedback', async ({ page }) => {
   await loadChart(page);
+  await page.locator('#_sd_rendered').evaluate((element) => {
+    element.style.setProperty('--md-chart-bg', '#1a2b3c');
+  });
   const button = page.locator('.chart-copy-png-btn');
   await button.click();
   await expect.poll(() => page.evaluate(() => ({
@@ -83,10 +87,43 @@ test('chart PNG copy writes the rendered canvas and uses tick feedback', async (
     size: window.__copiedPngPart && window.__copiedPngPart.size,
   }))).toEqual({ type: 'image/png', size: expect.any(Number) });
   expect(await page.evaluate(() => window.__copiedPngPart.size)).toBeGreaterThan(0);
+  expect(await page.evaluate(async () => {
+    const image = await createImageBitmap(window.__copiedPngPart);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return Array.from(context.getImageData(0, 0, 1, 1).data);
+  })).toEqual([26, 43, 60, 255]);
   await expect(button.locator('polyline')).toHaveCount(1);
   await expect(button.locator('.chart-copy-label')).toHaveText('PNG');
   await page.waitForTimeout(1600);
   await expect(button.locator('polyline')).toHaveCount(0);
+});
+
+test('chart PNG download includes the rendered background', async ({ page }) => {
+  await loadChart(page);
+  await page.locator('#_sd_rendered').evaluate((element) => {
+    element.style.setProperty('--md-chart-bg', '#1a2b3c');
+  });
+  await page.getByRole('button', { name: 'Chart options' }).click();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download as PNG' }).click();
+  const download = await pending;
+  const bytes = fs.readFileSync(await download.path());
+  const pixel = await page.evaluate(async (base64) => {
+    const binary = atob(base64);
+    const data = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const image = await createImageBitmap(new Blob([data], { type: 'image/png' }));
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    return Array.from(context.getImageData(0, 0, 1, 1).data);
+  }, bytes.toString('base64'));
+  expect(pixel).toEqual([26, 43, 60, 255]);
 });
 
 test('chart copy chrome remains transparent across light and dark themes', async ({ page }) => {

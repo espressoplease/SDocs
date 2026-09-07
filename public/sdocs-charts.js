@@ -1143,20 +1143,66 @@
       flashCopyLabel(item, 'Not supported', 'PNG');
       return;
     }
-    entry.canvas.toBlob(function (blob) {
-      if (!blob || destroyed) return;
+    chartToPngBlob(entry).then(function (blob) {
+      if (destroyed) return;
       clipboard.write([new ClipboardItemApi({ 'image/png': blob })]).then(function () {
         if (!destroyed && item.isConnected) flashCopyButton(item, 'PNG');
       }).catch(function () {
         if (!destroyed && item.isConnected) flashCopyLabel(item, 'Failed', 'PNG');
       });
+    }).catch(function () {
+      if (!destroyed && item.isConnected) flashCopyLabel(item, 'Failed', 'PNG');
     });
+  }
+
+  function isTransparentColor(color) {
+    if (!color) return true;
+    color = String(color).replace(/\s+/g, '');
+    return color === 'transparent' || color === 'rgba(0,0,0,0)';
+  }
+
+  function chartBackgroundColor(entry) {
+    var plot = entry && entry.wrapper && entry.wrapper.querySelector('.sdoc-chart-plot');
+    var color = plot ? getComputedStyle(plot).backgroundColor : '';
+    if (!isTransparentColor(color)) return color;
+    var root = styleRoot();
+    color = root ? getComputedStyle(root).backgroundColor : '';
+    return isTransparentColor(color) ? '#ffffff' : color;
+  }
+
+  function chartToPngBlob(entry) {
+    return new Promise(function (resolve, reject) {
+      try {
+        var canvas = chartToPngCanvas(entry);
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob);
+          else reject(new Error('Chart PNG creation failed'));
+        }, 'image/png');
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function chartToPngCanvas(entry) {
+    var source = entry && entry.canvas;
+    if (!source || !(source.width > 0) || !(source.height > 0)) {
+      throw new Error('Chart PNG source is unavailable');
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = source.width;
+    canvas.height = source.height;
+    var context = canvas.getContext('2d');
+    context.fillStyle = chartBackgroundColor(entry);
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(source, 0, 0);
+    return canvas;
   }
 
   function downloadChartAction(entry) {
     if (!entry) return;
     var filename = (entry.data.title || 'chart').replace(/[^a-zA-Z0-9]/g, '_') + '.png';
-    var dataUrl = entry.canvas.toDataURL('image/png');
+    var dataUrl = chartToPngCanvas(entry).toDataURL('image/png');
     if (typeof env.downloadPng === 'function') {
       env.downloadPng(dataUrl, filename);
       return;
@@ -1284,9 +1330,10 @@
         // Temporarily boost devicePixelRatio for crisper PDF export
         chart.options.devicePixelRatio = (window.devicePixelRatio || 1) * 2.5;
         chart.resize();
-        dataUrl = chart.toBase64Image('image/png', 1);
+        dataUrl = chartToPngCanvas(entry).toDataURL('image/png', 1);
       } catch (e) {
-        dataUrl = chart.toBase64Image();
+        try { dataUrl = chartToPngCanvas(entry).toDataURL(); }
+        catch (_) { dataUrl = chart.toBase64Image(); }
       } finally {
         // Restore
         chart.options.devicePixelRatio = prevDpr;
