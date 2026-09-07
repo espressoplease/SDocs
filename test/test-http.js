@@ -1164,6 +1164,26 @@ module.exports = function(harness) {
       await assertEveryAssetVersioned('/cloud/sign-in', v);
     });
 
+    await testAsync('GET /cloud/business-invite serves the private trial invitation page', async () => {
+      const r = await get(BASE + '/cloud/business-invite?preview=signin');
+      assert.strictEqual(r.status, 200);
+      assert.ok(r.body.includes('Start your 14-day trial'));
+      assert.ok(r.body.includes('Sign in or create your account'));
+      assert.ok(r.body.includes('See example sdocs'));
+      assert.ok(r.body.includes('href="/developers"'));
+      assert.ok(r.body.includes('<a class="provider-button provider-link" data-provider="google"'));
+      assert.ok(r.body.includes('<a hidden class="provider-button provider-link" data-provider="github"'));
+      assert.strictEqual(r.headers['cache-control'], 'no-store');
+      assert.strictEqual(r.headers['x-robots-tag'], 'noindex, nofollow');
+      assert.strictEqual(r.headers['x-frame-options'], 'DENY');
+      assert.ok(r.headers['content-security-policy'].includes("default-src 'none'"));
+    });
+
+    await testAsync('asset-versioning: /cloud/business-invite is versioned', async () => {
+      const v = JSON.parse((await get(BASE + '/version-check')).body).version;
+      await assertEveryAssetVersioned('/cloud/business-invite?preview=signin', v);
+    });
+
     let googleOAuthState;
     let googleOAuthCookie;
     await testAsync('configured Google OAuth start redirects with state, nonce, and PKCE', async () => {
