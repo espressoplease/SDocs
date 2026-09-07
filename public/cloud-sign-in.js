@@ -1,7 +1,10 @@
 (function () {
   'use strict';
 
-  var DEFAULT_RETURN = '/cloud/admin';
+  var requestedDefault = document.body.getAttribute('data-auth-return');
+  var DEFAULT_RETURN = requestedDefault === 'current'
+    ? window.location.pathname + window.location.search
+    : '/cloud/admin';
   var params = new URLSearchParams(window.location.search);
 
   function safeReturnPath(value) {
@@ -20,6 +23,7 @@
     if (path.indexOf('/library') === 0) return 'Cloud library';
     if (path.indexOf('/cloud/admin') === 0) return 'Cloud settings';
     if (path.indexOf('/cloud/checkout') === 0) return 'checkout';
+    if (path.indexOf('/cloud/business-invite') === 0) return 'your invitation';
     if (path.indexOf('/cloud/authorize') === 0) return 'CLI authorization';
     if (path.indexOf('/cloud/document') === 0) return 'your document';
     if (path.indexOf('/docs') === 0 || path.indexOf('/s/') === 0 ||

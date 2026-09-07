@@ -2767,6 +2767,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Private Business trial invitations use the normal email-bound workspace
+  // invitation token, with sign-in embedded as the first step. The preview
+  // query is inert and exists so the page can be reviewed without issuing an
+  // invitation.
+  if (pathname === '/cloud/business-invite') {
+    const returnPath = pathname + url.search;
+    const authenticated = cloudAuthSession(req);
+    if (authenticated.ok && !cloudTermsAccepted(authenticated.user) &&
+        url.searchParams.get('preview') !== 'signin') {
+      res.writeHead(303, { Location: cloudTermsLocation(returnPath), 'Cache-Control': 'no-store' });
+      res.end();
+      return;
+    }
+    const hasCloudOAuth = Boolean(cloudGoogleOAuth || cloudGitHubOAuth);
+    serveHtmlWithRewrite(res, path.join(__dirname, 'public', 'cloud-business-invite.html'), {
+      '__OAUTH_PROVIDERS_HIDDEN__': hasCloudOAuth ? '' : ' hidden',
+      '__GOOGLE_OAUTH_HIDDEN__': cloudGoogleOAuth ? '' : ' hidden',
+      '__GITHUB_OAUTH_HIDDEN__': cloudGitHubOAuth ? '' : ' hidden',
+    }, {
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'no-referrer',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'",
+    });
+    return;
+  }
+
   if (pathname === '/cloud/checkout') {
     const authenticated = cloudAuthSession(req);
     if (!authenticated.ok) {
