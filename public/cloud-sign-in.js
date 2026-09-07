@@ -2,6 +2,7 @@
   'use strict';
 
   var requestedDefault = document.body.getAttribute('data-auth-return');
+  var inlineMode = document.body.getAttribute('data-auth-mode') === 'inline';
   var DEFAULT_RETURN = requestedDefault === 'current'
     ? window.location.pathname + window.location.search
     : '/cloud/admin';
@@ -113,6 +114,13 @@
       });
       var result = await response.json();
       if (!response.ok) throw new Error(result.error || 'verification_failed');
+      if (inlineMode) {
+        status.textContent = 'Signed in.';
+        window.dispatchEvent(new CustomEvent('sdocs:auth-complete', {
+          detail: { returnTo: result.return_to || returnPath }
+        }));
+        return;
+      }
       window.location.assign(result.return_to || returnPath);
     } catch (_) {
       codeInput.setAttribute('aria-invalid', 'true');

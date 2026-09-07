@@ -50,11 +50,54 @@
 .accept-button { margin-top: 15px; }
 .accept-button:disabled { opacity: .55; cursor: default; }
 
-.product-story, .example-section, .invite-details {
+.terms-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.terms-choice input { margin-top: 2px; accent-color: var(--blue); }
+.terms-choice a, .terms-privacy a { color: var(--blue); text-underline-offset: 2px; }
+.terms-privacy {
+  margin: 10px 0 16px 25px;
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.terms-card .primary-button:disabled { opacity: .55; cursor: default; }
+.complete-card { text-align: center; }
+.complete-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--green) 12%, var(--surface));
+  color: var(--green);
+}
+.complete-card h2 { font-size: 19px; font-weight: 600; }
+.complete-card > p {
+  margin-top: 8px;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.complete-library-link {
+  display: flex;
+  margin-top: 20px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.install-section, .product-story, .example-section, .invite-details {
   width: 100%;
   margin-top: 62px;
 }
-.product-story h2, .example-section h2 {
+.install-section h2, .product-story h2, .example-section h2 {
   max-width: 560px;
   margin-top: 8px;
   font-size: 24px;
@@ -66,6 +109,110 @@
   color: var(--text-2);
   font-size: 13px;
   line-height: 1.6;
+}
+
+.install-commands {
+  display: grid;
+  gap: 1px;
+  margin-top: 22px;
+  overflow: hidden;
+  border-radius: 11px;
+  background: var(--border);
+}
+.install-command {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 16px;
+  background: var(--surface-2);
+}
+.install-step {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 600;
+}
+.install-command > div { min-width: 0; }
+.install-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-3);
+  font-size: 10px;
+}
+.install-command code {
+  display: block;
+  overflow-x: auto;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+.copy-button, .prompt-copy-button {
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  font: inherit;
+  cursor: pointer;
+}
+.copy-button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+}
+.copy-button:hover { background: var(--surface); color: var(--text); }
+.copy-button.is-copied { color: var(--green); }
+.agent-install-prompt {
+  margin-top: 13px;
+  padding: 18px;
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+.agent-prompt-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.agent-prompt-heading > div { min-width: 0; }
+.agent-prompt-heading h3 { font-size: 13px; font-weight: 600; }
+.agent-prompt-heading p {
+  margin-top: 4px;
+  color: var(--text-3);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.prompt-copy-button {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--blue);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.prompt-copy-button:hover { color: var(--text); }
+.agent-install-prompt pre {
+  max-height: 220px;
+  margin-top: 16px;
+  overflow: auto;
+  padding: 15px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
 }
 
 .value-paths {
@@ -219,8 +366,11 @@
   .invite-intro h1 { font-size: 31px; }
   .invite-intro > p:last-child { margin-top: 13px; font-size: 14px; }
   .business-auth-card { padding: 20px; }
-  .product-story, .example-section, .invite-details { margin-top: 48px; }
-  .product-story h2, .example-section h2 { font-size: 21px; }
+  .install-section, .product-story, .example-section, .invite-details { margin-top: 48px; }
+  .install-section h2, .product-story h2, .example-section h2 { font-size: 21px; }
   .value-path { padding: 19px; }
   .example-link { padding: 14px; }
+  .install-command { grid-template-columns: 25px minmax(0, 1fr) 32px; gap: 9px; padding: 14px 12px; }
+  .agent-prompt-heading { display: block; }
+  .prompt-copy-button { margin-top: 12px; }
 }
