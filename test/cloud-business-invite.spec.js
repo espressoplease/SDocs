@@ -35,6 +35,8 @@ test('encrypted fragment personalizes the narrow invitation without exposing det
   await expect(page.getByLabel('Email address')).toHaveValue('dexter@humanlayer.dev');
   await expect(page.locator('#invite-accept')).toBeHidden();
   await expect(page.locator('.preview-note')).toContainText('does not create an account');
+  await expect(page.getByRole('heading', { name: 'To get started:' })).toBeVisible();
+  await expect(page.locator('.overview-number')).toHaveText(['1', '2', '3', '4', '5', '6']);
   expect(new URL(page.url()).search).not.toContain('Dexter');
   expect(new URL(page.url()).search).not.toContain('humanlayer');
 
@@ -66,6 +68,17 @@ test('encrypted fragment personalizes the narrow invitation without exposing det
   for (let index = 0; index < 3; index += 1) {
     await expect(exampleLinks.nth(index)).toHaveAttribute('href', /^https:\/\/smalldocs\.org\/docs#md=/);
   }
+  const expandedWidths = await page.evaluate(() => ({
+    install: [document.querySelector('#install-details .overview-body'),
+      document.querySelector('.install-commands')].map(node => Math.round(node.getBoundingClientRect().width)),
+    ways: [document.querySelector('#ways-details .overview-body'),
+      document.querySelector('.value-paths')].map(node => Math.round(node.getBoundingClientRect().width)),
+    examples: [document.querySelector('#examples-details .overview-body'),
+      document.querySelector('.example-links')].map(node => Math.round(node.getBoundingClientRect().width)),
+  }));
+  expect(expandedWidths.install[0]).toBe(expandedWidths.install[1]);
+  expect(expandedWidths.ways[0]).toBe(expandedWidths.ways[1]);
+  expect(expandedWidths.examples[0]).toBe(expandedWidths.examples[1]);
 });
 
 test('email code, Terms, profile, and invitation completion stay on one page', async ({ page }) => {

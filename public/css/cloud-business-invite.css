@@ -99,7 +99,7 @@
 }
 .product-story h2 {
   max-width: 560px;
-  margin-top: 3px;
+  padding: 18px 18px 0;
   font-size: 24px;
   line-height: 1.25;
   letter-spacing: -.028em;
@@ -110,15 +110,19 @@
   font-size: 13px;
   line-height: 1.6;
 }
-.install-section > .section-intro, .example-section > .section-intro { margin-top: 0; }
+.install-section > .section-intro, .example-section > .section-intro {
+  margin-top: 0;
+  padding: 18px 18px 0;
+}
 
 .install-commands {
   display: grid;
-  gap: 1px;
-  margin-top: 22px;
+  gap: 0;
+  margin-top: 18px;
   overflow: hidden;
-  border-radius: 11px;
-  background: var(--border);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 .install-command {
   min-width: 0;
@@ -127,8 +131,10 @@
   align-items: center;
   gap: 12px;
   padding: 15px 16px;
-  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
+.install-command:first-child { border-top: 0; }
 .install-step {
   width: 25px;
   height: 25px;
@@ -174,10 +180,10 @@
 .copy-button:hover { background: var(--surface); color: var(--text); }
 .copy-button.is-copied { color: var(--green); }
 .agent-install-prompt {
-  margin-top: 13px;
+  margin-top: 8px;
   padding: 18px;
-  border-radius: 11px;
-  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 .agent-prompt-heading {
   display: flex;
@@ -208,7 +214,7 @@
   overflow: auto;
   padding: 15px;
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text-2);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 10.5px;
@@ -218,14 +224,18 @@
 
 .value-paths {
   display: grid;
-  gap: 10px;
-  margin-top: 24px;
+  gap: 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 .value-path {
-  padding: 22px;
-  border-radius: 12px;
-  background: var(--surface-2);
+  padding: 20px 18px;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
 }
+.value-path:first-child { border-top: 0; }
 .value-path h3 {
   font-size: 16px;
   font-weight: 600;
@@ -242,7 +252,7 @@
   margin-top: 17px;
   padding: 14px 15px;
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--surface-2);
 }
 .prompt-example span {
   color: var(--text-3);
@@ -269,21 +279,25 @@
 
 .example-links {
   display: grid;
-  gap: 7px;
-  margin-top: 20px;
+  gap: 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 .example-link {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 16px 17px;
-  border-radius: 10px;
-  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
   color: var(--text);
   text-decoration: none;
   transition: background .15s, color .15s;
 }
-.example-link:hover { background: color-mix(in srgb, var(--surface-2) 75%, var(--border)); }
+.example-link:first-child { border-top: 0; }
+.example-link:hover { background: color-mix(in srgb, var(--surface) 82%, var(--border)); }
 .example-copy { min-width: 0; }
 .example-copy strong {
   display: block;
@@ -305,7 +319,13 @@
   transition: color .15s;
 }
 .example-link:hover > svg { color: var(--blue); }
-.github-link { margin-top: 15px; }
+.github-link {
+  display: block;
+  margin-top: 8px;
+  padding: 15px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
 
 .invite-overview {
   width: 100%;
@@ -313,7 +333,15 @@
   gap: 7px;
   margin-top: 52px;
 }
+.overview-title {
+  margin: 0 0 7px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -.02em;
+}
 .invite-overview details {
+  overflow: hidden;
   border: 0;
   border-radius: 10px;
   background: var(--surface-2);
@@ -322,17 +350,30 @@
 .invite-overview details:hover { background: color-mix(in srgb, var(--surface-2) 75%, var(--border)); }
 .invite-overview details[open], .invite-overview details[open]:hover { background: var(--surface-2); }
 .invite-overview summary {
-  min-height: 49px;
+  min-height: 58px;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 11px 16px;
   list-style: none;
   color: var(--text-2);
-  font-size: 12.5px;
-  font-weight: 400;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
 }
+.overview-number {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+}
+.overview-label { min-width: 0; }
 .invite-overview summary::-webkit-details-marker { display: none; }
 .invite-overview summary svg {
   margin-left: auto;
@@ -342,7 +383,17 @@
 }
 .invite-overview details[open] summary svg { transform: rotate(90deg); }
 .invite-overview summary:hover { color: var(--text); }
-.details-body, .overview-body { padding: 2px 16px 18px; }
+.overview-body {
+  width: 100%;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+.details-body {
+  width: 100%;
+  padding: 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
 .details-body > p {
   color: var(--text-2);
   font-size: 12px;
@@ -363,9 +414,11 @@
   .invite-intro > p:last-child { margin-top: 13px; font-size: 14px; }
   .business-auth-card { padding: 20px; }
   .invite-overview { margin-top: 42px; }
+  .overview-title { font-size: 19px; }
+  .invite-overview summary { min-height: 56px; font-size: 13.5px; }
   .product-story h2 { font-size: 21px; }
-  .value-path { padding: 19px; }
-  .example-link { padding: 14px; }
+  .value-path { padding: 18px 15px; }
+  .example-link { padding: 14px 15px; }
   .install-command { grid-template-columns: 25px minmax(0, 1fr) 32px; gap: 9px; padding: 14px 12px; }
   .agent-prompt-heading { display: block; }
   .prompt-copy-button { margin-top: 12px; }
