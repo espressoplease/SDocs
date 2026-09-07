@@ -2772,19 +2772,13 @@ const server = http.createServer((req, res) => {
   // query is inert and exists so the page can be reviewed without issuing an
   // invitation.
   if (pathname === '/cloud/business-invite') {
-    const returnPath = pathname + url.search;
-    const authenticated = cloudAuthSession(req);
-    if (authenticated.ok && !cloudTermsAccepted(authenticated.user) &&
-        url.searchParams.get('preview') !== 'signin') {
-      res.writeHead(303, { Location: cloudTermsLocation(returnPath), 'Cache-Control': 'no-store' });
-      res.end();
-      return;
-    }
     const hasCloudOAuth = Boolean(cloudGoogleOAuth || cloudGitHubOAuth);
     serveHtmlWithRewrite(res, path.join(__dirname, 'public', 'cloud-business-invite.html'), {
       '__OAUTH_PROVIDERS_HIDDEN__': hasCloudOAuth ? '' : ' hidden',
       '__GOOGLE_OAUTH_HIDDEN__': cloudGoogleOAuth ? '' : ' hidden',
       '__GITHUB_OAUTH_HIDDEN__': cloudGitHubOAuth ? '' : ' hidden',
+      '__CLOUD_TERMS_VERSION__': CURRENT_TERMS_VERSION,
+      '__CLOUD_TERMS_LABEL__': CURRENT_TERMS_LABEL,
     }, {
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',

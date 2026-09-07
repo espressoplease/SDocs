@@ -56,6 +56,7 @@ require('./test-agent-block')(harness);
 require('./test-router')(harness);
 require('./test-update-check')(harness);
 require('./test-source')(harness);
+require('./test-business-invite-link')(harness);
 require('./test-cloud-auth')(harness);
 require('./test-cloud-billing')(harness);
 require('./test-cloud-billing-lifecycle')(harness);

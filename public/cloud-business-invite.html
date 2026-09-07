@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/public/css/cloud-sign-in.css">
   <link rel="stylesheet" href="/public/css/cloud-business-invite.css">
 </head>
-<body data-auth-return="current">
+<body data-auth-return="current" data-auth-mode="inline">
   <header class="header">
     <a class="brand" href="/">
       <span class="brand-full">SmallDocs</span>
@@ -103,13 +103,36 @@
       <p class="preview-note" id="preview-note" hidden>This production preview does not create an account or accept an invitation.</p>
     </section>
 
+    <section class="auth-card business-auth-card terms-card" id="invite-terms" aria-labelledby="invite-terms-title" hidden>
+      <div class="auth-heading">
+        <div class="auth-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M13 16h-3"/><path d="M18 6V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"/><path d="M18 9v6"/><path d="m21 12-3 3-3-3"/></svg>
+        </div>
+        <div>
+          <h2 id="invite-terms-title" tabindex="-1">Review the Terms</h2>
+          <p>Before you use SmallDocs Cloud, review the Terms dated __CLOUD_TERMS_LABEL__.</p>
+        </div>
+      </div>
+      <form id="invite-terms-form" action="/api/cloud/auth/terms/accept" method="post" novalidate>
+        <input id="invite-terms-version" type="hidden" value="__CLOUD_TERMS_VERSION__">
+        <label class="terms-choice" for="invite-terms-accepted">
+          <input id="invite-terms-accepted" type="checkbox" required>
+          <span>I agree to the <a href="/legal" target="_blank" rel="noopener">Terms of Service</a>.</span>
+        </label>
+        <p class="terms-privacy">The <a href="/privacy" target="_blank" rel="noopener">Privacy Notice</a> explains how SmallDocs handles personal data.</p>
+        <p class="field-error" id="invite-terms-error" role="alert"></p>
+        <button class="primary-button" id="invite-terms-submit" type="submit" disabled>Agree and continue</button>
+      </form>
+      <p class="prototype-status" id="invite-terms-status" role="status" aria-live="polite"></p>
+    </section>
+
     <section class="auth-card business-auth-card accept-card" id="invite-accept" aria-labelledby="accept-title" hidden>
       <div class="auth-heading">
         <div class="auth-mark" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
         </div>
         <div>
-          <h2 id="accept-title">Complete your profile</h2>
+          <h2 id="accept-title" tabindex="-1">Complete your profile</h2>
           <p>Your name appears when you share and edit documents with other people.</p>
         </div>
       </div>
@@ -124,6 +147,66 @@
       <p class="field-note">No payment details are collected when you accept the invitation.</p>
       <button class="primary-button accept-button" id="accept-invite" type="button" disabled>Accept invitation</button>
       <p class="prototype-status" id="invite-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="auth-card business-auth-card complete-card" id="invite-complete" aria-labelledby="complete-title" hidden>
+      <div class="complete-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h2 id="complete-title" tabindex="-1">Your workspace is ready</h2>
+      <p>Install SmallDocs Cloud below, then ask your coding agent to create your first sdoc.</p>
+      <a class="primary-button complete-library-link" id="complete-library-link" href="/library?scope=cloud">Open Cloud Library</a>
+    </section>
+
+    <section class="install-section" id="install" aria-labelledby="install-title">
+      <p class="section-eyebrow">Set up this machine</p>
+      <h2 id="install-title">Install SmallDocs Cloud</h2>
+      <p class="section-intro">Install the CLI, connect it to this account, and add the SmallDocs skill to your coding agent. New sdocs for this workspace should be created and updated in Cloud.</p>
+
+      <div class="install-commands" aria-label="Install commands">
+        <div class="install-command">
+          <span class="install-step">1</span>
+          <div><span class="install-label">Install or update the CLI</span><code>curl -fsSL https://smalldocs.org/install | sh</code></div>
+          <button class="copy-button" type="button" data-copy="curl -fsSL https://smalldocs.org/install | sh" aria-label="Copy CLI install command">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="install-command">
+          <span class="install-step">2</span>
+          <div><span class="install-label">Connect this machine to Cloud</span><code>sdoc cloud login</code></div>
+          <button class="copy-button" type="button" data-copy="sdoc cloud login" aria-label="Copy Cloud login command">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="install-command">
+          <span class="install-step">3</span>
+          <div><span class="install-label">Install the agent skill</span><code>sdoc setup --yes</code></div>
+          <button class="copy-button" type="button" data-copy="sdoc setup --yes" aria-label="Copy agent setup command">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="agent-install-prompt">
+        <div class="agent-prompt-heading">
+          <div>
+            <h3>Let your coding agent do the setup</h3>
+            <p>Paste this into Codex, Claude Code, Cursor, or another coding agent.</p>
+          </div>
+          <button class="prompt-copy-button" id="copy-install-prompt" type="button">Copy install prompt</button>
+        </div>
+        <pre id="install-prompt">Install and configure SmallDocs Cloud for me.
+
+1. Check whether the sdoc command is installed. If it is not, run: curl -fsSL https://smalldocs.org/install | sh
+2. If sdoc is already installed, run: sdoc upgrade
+3. Run: sdoc cloud login. Let me complete the browser authorization when it opens.
+4. Run: sdoc setup --yes to install or refresh the SmallDocs agent skill.
+5. Run: sdoc cloud status --json and confirm this machine is connected.
+
+For this workspace, use SmallDocs Cloud as the default. Create new documents with sdoc cloud create. Use cloud pull and cloud push when updating an existing document. Use Cloud tags, members and permission groups. Do not use local-only tags or share links unless I explicitly ask.
+
+If a command fails, stop and tell me what happened.</pre>
+      </div>
     </section>
 
     <section class="product-story" aria-labelledby="product-story-title">
