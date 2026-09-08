@@ -12,6 +12,36 @@
   var lastName = document.getElementById('invite-last-name');
   var profileLoaded = false;
 
+  function queryText(name, maxLength) {
+    var value = params.get(name);
+    if (!value) return '';
+    return value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, maxLength);
+  }
+
+  var invitedName = queryText('name', 80);
+  var company = queryText('company', 120);
+  var inviter = queryText('inviter', 80);
+  var invitedEmail = queryText('email', 254);
+
+  if (invitedName) document.getElementById('page-title').textContent =
+    'Welcome to SmallDocs, ' + invitedName;
+  if (company) {
+    document.getElementById('nav-label').textContent = company + ' invitation';
+    document.getElementById('sdk-heading').textContent = 'Build SmallDocs into ' + company;
+    document.title = 'SmallDocs for ' + company;
+  }
+  if (inviter && company) document.getElementById('invite-eyebrow').textContent =
+    inviter + ' invited you to try SmallDocs with ' + company;
+  else if (inviter) document.getElementById('invite-eyebrow').textContent =
+    inviter + ' invited you to try SmallDocs';
+  else if (company) document.getElementById('invite-eyebrow').textContent =
+    'A private SmallDocs invitation for ' + company;
+  if (inviter) document.getElementById('auth-copy').textContent =
+    'Sign in with the address ' + inviter + ' invited. If you are new to SmallDocs, this also creates your account.';
+  if (invitedEmail && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(invitedEmail)) {
+    document.getElementById('email').value = invitedEmail;
+  }
+
   function readResponse(response) {
     return response.json().then(function (body) { return { response: response, body: body }; });
   }
@@ -77,7 +107,7 @@
         throw new Error('login_required');
       }
       if (!profileResult.response.ok) throw new Error('Enter your first and last name.');
-      show('Starting your trial...');
+      show('Accepting your invitation...');
       return fetch('/api/cloud/v1/invitations/' + encodeURIComponent(token) + '/accept', {
         method: 'POST',
         credentials: 'same-origin',
@@ -94,7 +124,7 @@
         }
         throw new Error('This invitation is no longer available.');
       }
-      show('Trial started. Opening your Cloud library...');
+      show('Invitation accepted. Opening your Cloud library...');
       window.location.assign('/library?scope=cloud&workspace=' + encodeURIComponent(result.body.workspace_id));
     }).catch(function (error) {
       if (error.message === 'login_required') return;

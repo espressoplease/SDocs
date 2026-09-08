@@ -913,12 +913,14 @@ module.exports = function(harness) {
       await assertEveryAssetVersioned('/cloud/sign-in', v);
     });
 
-    await testAsync('GET /cloud/business-invite serves the private trial invitation page', async () => {
+    await testAsync('GET /cloud/business-invite serves the private invitation page', async () => {
       const r = await get(BASE + '/cloud/business-invite?preview=signin');
       assert.strictEqual(r.status, 200);
-      assert.ok(r.body.includes('Start your 14-day trial'));
-      assert.ok(r.body.includes('Sign in or create your account'));
-      assert.ok(r.body.includes('See example sdocs'));
+      assert.ok(r.body.includes('Welcome to SmallDocs'));
+      assert.ok(r.body.includes('Turn coding-agent work into documents your team can use'));
+      assert.ok(r.body.includes('Trial terms and pricing'));
+      assert.ok(r.body.includes('Accept your invitation'));
+      assert.ok(r.body.includes('Open a few SmallDocs'));
       assert.ok(r.body.includes('href="/developers"'));
       assert.ok(r.body.includes('<a class="provider-button provider-link" data-provider="google"'));
       assert.ok(r.body.includes('<a hidden class="provider-button provider-link" data-provider="github"'));
