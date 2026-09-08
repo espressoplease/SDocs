@@ -238,6 +238,7 @@
         '/library?scope=cloud&workspace=' + encodeURIComponent(result.body.workspace_id);
       showOnly(completeCard);
       document.getElementById('complete-title').focus();
+      document.getElementById('install-details').open = true;
       document.getElementById('install').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }).catch(function (error) {
       if (error.message === 'login_required') return;
