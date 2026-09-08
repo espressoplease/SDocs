@@ -1699,11 +1699,31 @@ module.exports = function(harness) {
     });
 
     await testAsync('Cloud invitation is email-bound, grants projects, and is single-use', async () => {
+      const Database = require('better-sqlite3');
+      const queuedInvitationJobs = () => {
+        const jobs = new Database(testCloudJobsDbPath, { readonly: true });
+        const count = jobs.prepare(`
+          SELECT COUNT(*) AS count FROM cloud_jobs WHERE type = 'invitation_email'
+        `).get().count;
+        jobs.close();
+        return count;
+      };
+      const jobsBeforeQuietInvite = queuedInvitationJobs();
+      const quietInvite = await post(BASE + '/api/cloud/v1/workspaces/' +
+        cloudTeamWorkspace.workspaceId + '/invitations', {
+        email: 'quiet-member@example.com', role: 'member', send_email: false,
+        project_grants: [{ projectId: cloudTeamProject.id, role: 'editor' }],
+      }, { Origin: BASE, Cookie: cloudCookie });
+      assert.strictEqual(quietInvite.status, 201);
+      assert.strictEqual(JSON.parse(quietInvite.body).invitation.notification_scheduled, false);
+      assert.strictEqual(queuedInvitationJobs(), jobsBeforeQuietInvite);
+
       const invited = await post(BASE + '/api/cloud/v1/workspaces/' + cloudTeamWorkspace.workspaceId + '/invitations', {
         email: 'team-member@example.com', role: 'member',
         project_grants: [{ projectId: cloudTeamProject.id, role: 'editor' }],
       }, { Origin: BASE, Cookie: cloudCookie });
       assert.strictEqual(invited.status, 201);
+      assert.strictEqual(JSON.parse(invited.body).invitation.notification_scheduled, true);
       const acceptUrl = JSON.parse(invited.body).invitation.accept_url;
       const token = new URL(acceptUrl).searchParams.get('token');
       assert.ok(token);
