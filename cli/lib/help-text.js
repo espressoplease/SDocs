@@ -58,6 +58,9 @@ USAGE
   sdoc defaults                    Show ~/.sdocs/styles.yaml
   sdoc defaults --reset            Remove default styles
   sdoc setup                       Install the SmallDocs skill for your coding agents
+  sdoc setup --cloud --yes         Enable Cloud-first opens and install the Cloud skill
+  sdoc setup --cloud --account ID  Use one Cloud account for automatic creates
+  sdoc setup --standard --yes      Return to local-first behavior
   sdoc refresh                     Refresh the SmallDocs skill to the current version
   sdoc auto-update [on|off]        Toggle auto-install of sdoc updates
   sdoc upgrade                     Upgrade sdoc to the latest version now
@@ -89,6 +92,7 @@ OPTIONS
   --source <source>     Add a coarse source marker to a short link. Supported
                         social labels are x, yt or youtube, and linkedin or li.
   --json                Machine-readable output for safe and Cloud commands.
+  --no-open             Do not launch the browser after a normal file open.
   --audit               Also print GitHub links to server-side source
                         files (safe subcommand only).
   --keep-open           feedback subcommand: keep the bridge alive across

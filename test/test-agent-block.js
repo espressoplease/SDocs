@@ -114,6 +114,25 @@ module.exports = function (harness) {
     assert.ok(!cli.AGENT_BLOCK_BODY.includes('--project'));
   });
 
+  test('Cloud-aware skill describes account-based Cloud discovery', () => {
+    assert.ok(cli.CLOUD_SKILL_DESCRIPTION.includes('enabled Cloud-first mode'));
+    assert.ok(cli.CLOUD_SKILL_BODY.includes('sdoc cloud members'));
+    assert.ok(cli.CLOUD_SKILL_BODY.includes('sdoc cloud permission-groups'));
+    assert.ok(cli.CLOUD_SKILL_BODY.includes('sdoc cloud create FILE.md --account ACCOUNT_UUID --json'));
+    assert.ok(!cli.CLOUD_SKILL_BODY.includes('sdoc cloud projects'));
+    assert.ok(!cli.CLOUD_SKILL_BODY.includes('--project'));
+  });
+
+  test('current changelog entry contains both exact installed skill bodies', () => {
+    const changelog = fs.readFileSync(path.join(__dirname, '..', 'public', 'agent-changes.md'), 'utf8');
+    const start = changelog.indexOf(`## v${cli.SKILL_VERSION} `);
+    const next = changelog.indexOf('\n## v', start + 1);
+    const entry = changelog.slice(start, next < 0 ? changelog.length : next);
+    assert.ok(start >= 0, 'current skill version is listed');
+    assert.ok(entry.includes(cli.SKILL_BODY.trim()), 'standard skill body is exact');
+    assert.ok(entry.includes(cli.CLOUD_SKILL_BODY.trim()), 'Cloud skill body is exact');
+  });
+
   test('refreshContent: legacy v1 is migrated, fromVersion=1', () => {
     const r = cli.refreshContent('# user prefix\n\n' + LEGACY_V1 + 'user suffix\n');
     assert.strictEqual(r.changed, true);
@@ -272,6 +291,11 @@ module.exports = function (harness) {
     assert.strictEqual(cli.readSkillVersion(''), null);
   });
 
+  test('readSkillEdition distinguishes standard and Cloud skills', () => {
+    assert.strictEqual(cli.readSkillEdition(cli.formatSkill(7)), 'standard');
+    assert.strictEqual(cli.readSkillEdition(cli.formatSkill(7, { cloud: true })), 'cloud');
+  });
+
   test('formatSkill description has no em/en dashes and no double quotes (YAML-safe)', () => {
     const desc = cli.SKILL_DESCRIPTION;
     assert.ok(!desc.includes('"'), 'no double quotes (would break the quoted scalar)');
@@ -279,6 +303,28 @@ module.exports = function (harness) {
     assert.ok(desc.length > 0 && desc.length <= 1024, 'within the 1-1024 char limit');
   });
 
+  test('Cloud-aware skill keeps the same name and loads live state only for Cloud work', () => {
+    const out = cli.formatSkill(cli.SKILL_VERSION, { cloud: true });
+    assert.ok(out.includes('name: smalldocs'));
+    assert.ok(out.includes('This user has enabled Cloud-first mode'));
+    assert.ok(out.includes('sdoc cloud status --json'));
+    assert.ok(out.includes('creates a Cloud document for an unbound file'));
+    assert.ok(out.includes('Use `sdoc FILE.md +tag1 +tag2` to add Cloud tags'));
+    assert.ok(!out.includes('This standard skill does not indicate'));
+    assert.ok(out.includes('Treat Cloud as a source of context'));
+    assert.ok(out.includes('search Cloud before recreating that context'));
+    assert.ok(out.includes('sdoc cloud pull DOCUMENT_UUID --output PATH --no-bind --json'));
+    assert.ok(cli.CLOUD_SKILL_DESCRIPTION.includes('creates or updates the Cloud copy'));
+    assert.ok(!out.includes('`sdoc library`'));
+  });
+
+  test('both skill descriptions are YAML-safe', () => {
+    for (const desc of [cli.SKILL_DESCRIPTION, cli.CLOUD_SKILL_DESCRIPTION]) {
+      assert.ok(!desc.includes('"'), 'no double quotes');
+      assert.ok(!desc.includes('\u2014') && !desc.includes('\u2013'), 'no em/en dashes');
+      assert.ok(desc.length > 0 && desc.length <= 1024, 'within description limit');
+    }
+  });
   // ── removeBlockContent (migration stripper) ─────────────────
 
   test('removeBlockContent: absent returns absent', () => {

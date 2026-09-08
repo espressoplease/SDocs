@@ -144,7 +144,7 @@
       <input class="text-input" id="invite-first-name" type="text" maxlength="128" autocomplete="given-name" required>
       <label class="profile-label" for="invite-last-name">Last name</label>
       <input class="text-input" id="invite-last-name" type="text" maxlength="128" autocomplete="family-name" required>
-      <p class="field-note">No payment details are collected when you accept the invitation.</p>
+      <p class="field-note">Accepting joins the invited SmallDocs Cloud workspace.</p>
       <button class="primary-button accept-button" id="accept-invite" type="button" disabled>Accept invitation</button>
       <p class="prototype-status" id="invite-status" role="status" aria-live="polite"></p>
     </section>
@@ -183,8 +183,8 @@
         </div>
         <div class="install-command">
           <span class="install-step">3</span>
-          <div><span class="install-label">Install the agent skill</span><code>sdoc setup --yes</code></div>
-          <button class="copy-button" type="button" data-copy="sdoc setup --yes" aria-label="Copy agent setup command">
+          <div><span class="install-label">Enable Cloud-first sdocs</span><code id="cloud-setup-command">sdoc setup --cloud --yes</code></div>
+          <button class="copy-button" id="copy-cloud-setup" type="button" data-copy="sdoc setup --cloud --yes" aria-label="Copy agent setup command">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
@@ -203,10 +203,10 @@
 1. Check whether the sdoc command is installed. If it is not, run: curl -fsSL https://smalldocs.org/install | sh
 2. If sdoc is already installed, run: sdoc upgrade
 3. Run: sdoc cloud login. Let me complete the browser authorization when it opens.
-4. Run: sdoc setup --yes to install or refresh the SmallDocs agent skill.
+4. Run: sdoc setup --cloud --yes to enable Cloud-first sdocs and install the SmallDocs agent skill.
 5. Run: sdoc cloud status --json and confirm this machine is connected.
 
-For this workspace, use SmallDocs Cloud as the default. Create new documents with sdoc cloud create. Use cloud pull and cloud push when updating an existing document. Use Cloud tags, members and permission groups. Do not use local-only tags or share links unless I explicitly ask.
+For this workspace, use SmallDocs Cloud as the default. Use sdoc FILE.md for new and updated Markdown so the CLI creates or updates the Cloud document before it opens. Use +tag arguments for Cloud tags. Do not use local-only tags, the local library, or share links unless I explicitly ask.
 
 If a command fails, stop and tell me what happened.</pre>
       </div>
@@ -280,9 +280,9 @@ If a command fails, stop and tell me what happened.</pre>
         </div>
       </details>
       <details>
-        <summary><span class="overview-number">6</span><span class="overview-label">Trial terms and pricing</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <summary><span class="overview-number">6</span><span class="overview-label">Your free access</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
         <div class="details-body">
-          <p>Your invitation includes 14 days of Cloud access. No card is required and nothing renews automatically. Continue for $18 per workspace member each month only if you choose. When the trial ends, creating and editing stops. Existing documents remain available to open and export for 30 days.</p>
+          <p>Enjoy your free SmallDocs Cloud trial. Use it to create, update and share sdocs with your team. We will be in touch to hear how it is going and discuss next steps.</p>
         </div>
       </details>
     </section>

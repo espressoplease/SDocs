@@ -7,7 +7,16 @@ module.exports = function(harness) {
   const io = require('../cli/lib/io');
   const credentials = require('../cli/lib/cloud-credentials');
   const bindings = require('../cli/lib/cloud-bindings');
-  const { CloudClient, runCloudCommand, filterTags } = require('../cli/lib/cloud-commands');
+  const { CloudClient, runCloudCommand, autoSyncOpen, filterTags } =
+    require('../cli/lib/cloud-commands');
+
+  test('setup parser captures Cloud-first edition and preferred account', () => {
+    const parsed = io.parseArgs(['setup', '--cloud', '--account', 'acct-1', '--yes']);
+    assert.strictEqual(parsed.subcommand, 'setup');
+    assert.strictEqual(parsed.skillEdition, 'cloud');
+    assert.strictEqual(parsed.accountFlag, 'acct-1');
+    assert.strictEqual(parsed.yesFlag, true);
+  });
 
   test('cloud CLI parser captures nested action flags', () => {
     const parsed = io.parseArgs(['cloud', 'pull', 'doc-id', '--revision', 'rev-id',
@@ -401,6 +410,28 @@ module.exports = function(harness) {
       },
     };
 
+    await testAsync('Cloud login JSON offers Cloud-first setup', async () => {
+      const client = {
+        origin: 'https://cloud.test',
+        loadCredential() { return account; },
+        async authenticated() { return { user: { id: 'usr-1', email: 'agent@example.com' } }; },
+      };
+      const result = await capture(() => runCloudCommand({ file: 'login', jsonFlag: true }, { client }));
+      assert.strictEqual(result.skill_mode, 'cloud');
+      assert.strictEqual(result.already_logged_in, true);
+      assert.strictEqual(result.cloud_first_setup_command, 'sdoc setup --cloud --yes');
+    });
+
+    await testAsync('Cloud logout leaves the installed skill and offers an explicit restore', async () => {
+      const client = {
+        origin: 'https://cloud.test',
+        credentials: { remove() { throw new Error('no credential should be removed'); } },
+        loadCredential() { return null; },
+      };
+      const result = await capture(() => runCloudCommand({ file: 'logout', jsonFlag: true }, { client }));
+      assert.strictEqual(result.skill_unchanged, true);
+      assert.strictEqual(result.standard_setup_command, 'sdoc setup --standard --yes');
+    });
     async function capture(command) {
       let output = '';
       const original = process.stdout.write;
@@ -465,6 +496,31 @@ module.exports = function(harness) {
       assert.strictEqual(result.account_id, 'acct-1');
       assert.strictEqual(Object.hasOwn(result, 'project_id'), false);
       assert.ok(calls.some((call) => call.endpoint === '/api/cloud/v1/account/documents'));
+    });
+
+    await testAsync('Cloud-first open creates once, pushes later, and keeps +tags out of the file', async () => {
+      const autoSource = path.join(dir, 'auto-cloud.md');
+      fs.writeFileSync(autoSource, '# Automatic Cloud\nDraft');
+      const original = fs.readFileSync(autoSource, 'utf8');
+      const first = await captureStreams(() => autoSyncOpen({ file: autoSource,
+        addTags: ['customer', 'planning'] }, { client: fakeClient, accountId: 'acct-1' }));
+      assert.strictEqual(first.exitCode, 0);
+      assert.ok(first.stdout.includes('Created doc-1'));
+      assert.ok(first.stdout.includes('Updated Cloud tags for doc-1'));
+      assert.strictEqual(fs.readFileSync(autoSource, 'utf8'), original);
+      const createCall = calls.find((call) => call.endpoint === '/api/cloud/v1/account/documents'
+        && JSON.parse(call.options.body).filename === 'auto-cloud.md');
+      assert.strictEqual(JSON.parse(createCall.options.body).account_id, 'acct-1');
+      const tagCall = calls.find((call) => call.endpoint === '/api/cloud/v1/documents/doc-1/tags'
+        && JSON.parse(call.options.body).tags.includes('customer'));
+      assert.deepStrictEqual(JSON.parse(tagCall.options.body).tags,
+        ['release', 'customer', 'planning']);
+
+      fs.writeFileSync(autoSource, '# Automatic Cloud\nUpdated');
+      const second = await captureStreams(() => autoSyncOpen({ file: autoSource,
+        addTags: [] }, { client: fakeClient, accountId: 'acct-1' }));
+      assert.strictEqual(second.exitCode, 0);
+      assert.ok(second.stdout.includes('Pushed revision'));
     });
 
     await testAsync('cloud lists account members, tags, and document permission groups', async () => {

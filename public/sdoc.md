@@ -41,6 +41,8 @@ sdoc setup
 
 `sdoc setup` installs the SmallDocs **skill**: a `SKILL.md` whose short description sits in your agent's context and whose full reference loads on demand only when the agent reaches for it. One canonical copy is written to `~/.agents/skills/smalldocs/SKILL.md`. Agents that discover `~/.agents/skills` (opencode, Codex, Gemini CLI, Cursor, and the rest of the `.agents/skills` convention) read it directly; other detected agents receive a symlink in their own skills directory.
 
+After you connect SmallDocs Cloud, run `sdoc setup --cloud --yes`. In Cloud-first mode, `sdoc FILE.md` creates or updates the Cloud document before opening it. Add `--account UUID` during setup when the machine should always create new documents in one workspace. Run `sdoc setup --standard --yes` to return to local-first behavior.
+
 Setup detects 45+ agents using a table derived from [`vercel-labs/skills`](https://github.com/vercel-labs/skills). It's idempotent - safe to run any time. If you previously ran an older `sdoc setup` that pasted an always-on section into your `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`, running it again removes that section (the skill replaces it).
 
 **Manual fallback** (if you'd rather not run setup): create the skill directory and drop in a `SKILL.md`:
@@ -657,6 +659,12 @@ the SmallDocs skill for them: one canonical `SKILL.md` at
 directly; other detected agents receive a symlink in their skills directory.
 You're prompted automatically the first time you run any `sdoc` command, and you
 can re-run `sdoc setup` any time (it's idempotent).
+
+After `sdoc cloud login`, run `sdoc setup --cloud --yes`. Both editions use the
+same `smalldocs` skill name, so one replaces the other. In Cloud-first mode,
+ordinary `sdoc FILE.md` opens create or update Cloud before opening the browser.
+Use `sdoc setup --cloud --account UUID --yes` to keep automatic creates in one
+workspace when the user belongs to several accounts.
 
 If you previously ran an older `sdoc setup` that pasted an always-on SmallDocs
 section into a `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`, running `sdoc setup` or

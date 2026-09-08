@@ -62,7 +62,10 @@ function buildRouter() {
   r.register('comments', { handler: () => { console.log(helpText.COMMENTS_HELP); process.exit(0); } });
 
   // Setup / refresh / auto-update.
-  r.register('setup',       { handler: async (opts) => { await setup.runSetup({ force: true, yes: !!opts.yesFlag, dryRun: !!opts.dryRunFlag }); process.exit(0); } });
+  r.register('setup',       { handler: async (opts) => { await setup.runSetup({
+    force: true, yes: !!opts.yesFlag, dryRun: !!opts.dryRunFlag,
+    edition: opts.skillEdition, accountId: opts.accountFlag,
+  }); process.exit(0); } });
   r.register('refresh',     { handler: async () => { await setup.runRefresh(); process.exit(0); } });
   r.register('auto-update', { handler: (opts) => {
     // Sub-arg lives in opts.file (positional). Accept on/off/empty.
@@ -114,10 +117,15 @@ function buildRouter() {
   r.register('library',  { handler: async (opts) => { await libraryCommands.libraryCommand(opts); /* libraryOpen blocks */ } });
   r.register('cloud',    { handler: async (opts) => { await cloudCommands.runCloudCommand(opts); } });
 
-  r.register(null,       { handler: (opts) => {
-    // Index-on-open tap: fires before the open so any +tag CLI args land
-    // in the file's front matter before the browser receives the content.
-    libraryCommands.tapOpen(opts);
+  r.register(null,       { handler: async (opts) => {
+    const cloudFirst = setup.cloudFirstSettings();
+    if (cloudFirst) {
+      await cloudCommands.autoSyncOpen(opts, { accountId: cloudFirst.accountId });
+    } else {
+      // Index-on-open tap: fires before the open so any +tag CLI args land
+      // in the file's front matter before the browser receives the content.
+      libraryCommands.tapOpen(opts);
+    }
     return commands.openCommand(opts);
   } });
 
@@ -173,9 +181,12 @@ module.exports = {
   SKILL_VERSION:         agentBlock.SKILL_VERSION,
   SKILL_NAME:            agentBlock.SKILL_NAME,
   SKILL_DESCRIPTION:     agentBlock.SKILL_DESCRIPTION,
+  CLOUD_SKILL_DESCRIPTION: agentBlock.CLOUD_SKILL_DESCRIPTION,
   SKILL_BODY:            agentBlock.SKILL_BODY,
+  CLOUD_SKILL_BODY:      agentBlock.CLOUD_SKILL_BODY,
   formatSkill:           agentBlock.formatSkill,
   readSkillVersion:      agentBlock.readSkillVersion,
+  readSkillEdition:      agentBlock.readSkillEdition,
   canonicalSkillFile:    agentBlock.canonicalSkillFile,
   canonicalSkillDir:     agentBlock.canonicalSkillDir,
   resolveSkillAgents:    agentBlock.resolveSkillAgents,

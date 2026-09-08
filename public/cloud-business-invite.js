@@ -117,6 +117,19 @@
     button.disabled = !profileLoaded || !firstName.value.trim() || !lastName.value.trim();
   }
 
+  function configureCloudSetup(workspaceId) {
+    if (!workspaceId) return;
+    var command = 'sdoc setup --cloud --account ' + workspaceId + ' --yes';
+    var commandNode = document.getElementById('cloud-setup-command');
+    var copyButton = document.getElementById('copy-cloud-setup');
+    commandNode.textContent = command;
+    copyButton.setAttribute('data-copy', command);
+    var prompt = document.getElementById('install-prompt');
+    prompt.textContent = prompt.textContent.replace(
+      'sdoc setup --cloud --yes to enable Cloud-first sdocs',
+      command + ' to enable Cloud-first sdocs for this workspace');
+  }
+
   function showTerms() {
     showOnly(termsCard);
     document.getElementById('invite-terms-title').focus();
@@ -236,6 +249,7 @@
       }
       document.getElementById('complete-library-link').href =
         '/library?scope=cloud&workspace=' + encodeURIComponent(result.body.workspace_id);
+      configureCloudSetup(result.body.workspace_id);
       showOnly(completeCard);
       document.getElementById('complete-title').focus();
       document.getElementById('install-details').open = true;

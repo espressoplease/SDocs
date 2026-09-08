@@ -6,6 +6,7 @@ const constants = require('./constants');
 const io = require('./io');
 const credentialStore = require('./cloud-credentials');
 const bindings = require('./cloud-bindings');
+const SDocYaml = require('../shared/sdocs-yaml.js');
 
 const EXIT = { unexpected: 1, invalid_request: 2, login_required: 3,
   resource_unavailable: 4, account_required: 4, account_selection_required: 4,
@@ -20,6 +21,65 @@ const EXIT = { unexpected: 1, invalid_request: 2, login_required: 3,
 
 const CLOUD_HELP = `SmallDocs Cloud
 
+Cloud stores selected Markdown documents with search, revisions, member access,
+and cross-device CLI and browser access. Run \`sdoc setup --cloud --yes\` to make
+ordinary \`sdoc FILE.md\` opens create or update the Cloud document first.
+
+DISCOVER AND READ
+
+  sdoc cloud status --json
+  sdoc cloud tags --json
+  sdoc cloud search "incident response" --json
+  sdoc cloud search "authentication" --tag engineering --limit 10 --json
+  sdoc cloud ls --shared-with-me --json
+  sdoc cloud pull DOCUMENT_UUID --output /tmp/reference.md --no-bind --json
+
+Search is case-insensitive substring matching across document titles,
+filenames, tags, and current Markdown. It is not semantic search. Start with a
+specific phrase, then try a shorter phrase or an existing tag if needed.
+Multiple --tag values require every listed tag.
+
+With --json, search returns documents[]. Each result includes its id, title,
+tags, current revision metadata, and matches[]. A match reports field, line,
+and snippet. Search does not return the full Markdown. Use pull to retrieve a
+result. --no-bind makes that output a read-only reference from the CLI's point
+of view, so a later push will not update the Cloud document by accident.
+
+UPDATE AN EXISTING DOCUMENT
+
+  sdoc cloud pull DOCUMENT_UUID --output ./plan.md --json
+  # Edit ./plan.md with normal file tools.
+  sdoc cloud push ./plan.md --json
+
+A normal pull binds the local path to the Cloud document and revision. Push
+uses that binding. Inspect merge_classification, combined,
+local_updated_from_cloud, and local_changed_after_upload in the JSON response.
+Cloud may combine work saved by another writer since the pull.
+
+CREATE, ORGANIZE, AND SHARE ACCESS
+
+  sdoc cloud create PATH [--account UUID] --json
+  sdoc cloud tag DOCUMENT_UUID --tag TAG [--tag TAG ...] --json
+  sdoc cloud access DOCUMENT_UUID [--only-you | --everyone | --member USER_UUID ...] --json
+  sdoc cloud members [--account UUID] --json
+  sdoc cloud permission-groups [--account UUID] --json
+  sdoc cloud notify DOCUMENT_UUID [--document DOCUMENT_UUID ...] --member USER_UUID ... [--note TEXT] --json
+
+Notification sends a message to existing account members. It does not grant
+access or create a user. List members and set access deliberately before
+notifying them.
+
+HISTORY AND DELETION
+
+  sdoc cloud history DOCUMENT_UUID --json
+  sdoc cloud restore DOCUMENT_UUID --revision REVISION_UUID --json
+  sdoc cloud delete DOCUMENT_UUID --base-revision UUID --json
+  sdoc cloud deleted --json
+  sdoc cloud undelete DOCUMENT_UUID --base-revision UUID --json
+
+CONNECTION
+
+  sdoc cloud                       Show capabilities and the next setup step
   sdoc cloud login [--no-open]
   sdoc cloud logout
   sdoc cloud status [--account UUID]
@@ -150,6 +210,7 @@ class CloudClient {
 function emit(opts, command, value, human) {
   if (opts.jsonFlag) process.stdout.write(JSON.stringify(Object.assign({ ok: true, command }, value)) + '\n');
   else process.stdout.write((human || JSON.stringify(value, null, 2)) + '\n');
+  return value;
 }
 
 function fail(opts, command, error) {
@@ -168,11 +229,15 @@ function fail(opts, command, error) {
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 async function login(opts, client) {
+  const setupCommand = 'sdoc setup --cloud --yes';
   if (client.loadCredential()) {
     try {
       const me = await client.authenticated('/api/cloud/v1/me');
-      return emit(opts, 'cloud.login', { user: me.user, already_logged_in: true },
-        'Already signed in as ' + (me.user.email || me.user.id) + '.');
+      return emit(opts, 'cloud.login', { user: me.user, already_logged_in: true,
+        skill_mode: 'cloud',
+        cloud_first_setup_command: setupCommand },
+        'Already signed in as ' + (me.user.email || me.user.id) + '.\n' +
+        'Enable Cloud-first SmallDocs on this machine:\n' + setupCommand);
     } catch (_) {}
   }
   const issued = await client.raw('/api/cloud/v1/cli/device-authorizations', {
@@ -197,7 +262,10 @@ async function login(opts, client) {
       refresh_token: polled.data.refresh_token };
     client.saveCredential(credential);
     return emit(opts, 'cloud.login', { user_id: credential.user_id,
-      credential_id: credential.credential_id }, 'Cloud login saved for this machine.');
+      credential_id: credential.credential_id, skill_mode: 'cloud',
+      cloud_first_setup_command: setupCommand },
+    'Cloud login saved for this machine.\n' +
+    'Enable Cloud-first SmallDocs on this machine:\n' + setupCommand);
   }
   throw new CloudCommandError('login_required', 'Authorization expired before it was approved.');
 }
@@ -209,7 +277,12 @@ async function logout(opts, client) {
       { method: 'DELETE' }); } catch (_) {}
     client.credentials.remove(client.origin);
   }
-  emit(opts, 'cloud.logout', { logged_out: true }, 'Signed out of SmallDocs Cloud.');
+  const standardSetupCommand = 'sdoc setup --standard --yes';
+  emit(opts, 'cloud.logout', { logged_out: true, skill_unchanged: true,
+    standard_setup_command: standardSetupCommand },
+  'Signed out of SmallDocs Cloud. The installed skill was not changed.\n' +
+  'If you do not expect to use Cloud on this machine, restore local-first behavior:\n' +
+  standardSetupCommand);
 }
 
 function filterTags(documents, tags) {
@@ -381,7 +454,7 @@ async function create(opts, client) {
   bindings.cacheBase(credential.user_id, document.id, document.current_revision_id, content);
   bindings.clearPending(credential.user_id, file);
   const localChanged = bindings.hash(fs.readFileSync(file)) !== digest;
-  emit(opts, 'cloud.create', { document_id: document.id, revision_id: document.current_revision_id,
+  return emit(opts, 'cloud.create', { document_id: document.id, revision_id: document.current_revision_id,
     revision_number: document.revision_number,
     account_id: response.account && response.account.id || opts.accountFlag || null, path: file,
     tags: document.tags, sha256: digest, binding_created: true,
@@ -454,21 +527,32 @@ async function push(opts, client) {
     throw new CloudCommandError('unsafe_local_state',
       'file is not bound; provide both --document and --base-revision');
   }
-  const content = fs.readFileSync(file, 'utf8');
-  const digest = bindings.hash(content);
+  const localContent = fs.readFileSync(file, 'utf8');
+  const digest = bindings.hash(localContent);
   if (binding.content_sha256 === digest) {
     return emit(opts, 'cloud.push', { document_id: binding.document_id,
       base_revision_id: binding.revision_id, revision_id: binding.revision_id,
       sha256: digest, no_change: true }, 'No changes to push.');
   }
-  let pending = bindings.getPending(credential.user_id, file);
-  if (!pending || pending.document_id !== binding.document_id || pending.base_revision_id !== binding.revision_id || pending.sha256 !== digest) {
-    pending = { document_id: binding.document_id, base_revision_id: binding.revision_id,
-      sha256: digest, idempotency_key: crypto.randomUUID() };
-    bindings.setPending(credential.user_id, file, pending);
-  }
   const targetMarkdown = bindings.readBase(credential.user_id, binding.document_id,
     binding.revision_id);
+  let content = localContent;
+  if (opts.cloudFirst && targetMarkdown != null) {
+    const cloudMeta = SDocYaml.parseFrontMatter(targetMarkdown).meta || {};
+    const cloudTags = Array.isArray(cloudMeta.tags) ? cloudMeta.tags : [];
+    if (cloudTags.length) {
+      const parsed = SDocYaml.parseFrontMatter(localContent);
+      const meta = Object.assign({}, parsed.meta, { tags: cloudTags });
+      content = SDocYaml.serializeFrontMatter(meta) + '\n' + parsed.body;
+    }
+  }
+  const uploadDigest = bindings.hash(content);
+  let pending = bindings.getPending(credential.user_id, file);
+  if (!pending || pending.document_id !== binding.document_id || pending.base_revision_id !== binding.revision_id || pending.sha256 !== uploadDigest) {
+    pending = { document_id: binding.document_id, base_revision_id: binding.revision_id,
+      sha256: uploadDigest, idempotency_key: crypto.randomUUID() };
+    bindings.setPending(credential.user_id, file, pending);
+  }
   const response = await client.authenticated('/api/cloud/v1/documents/' + encodeURIComponent(binding.document_id) + '/revisions', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target_revision_id: binding.revision_id,
@@ -478,17 +562,27 @@ async function push(opts, client) {
   const document = response.document;
   const localChanged = bindings.hash(fs.readFileSync(file)) !== digest;
   const savedContent = typeof document.markdown === 'string' ? document.markdown : content;
-  const savedDigest = bindings.hash(savedContent);
-  const localUpdated = !localChanged && savedContent !== content;
+  let savedLocalContent = savedContent;
+  if (opts.cloudFirst) {
+    const saved = SDocYaml.parseFrontMatter(savedContent);
+    const local = SDocYaml.parseFrontMatter(localContent);
+    const meta = Object.assign({}, saved.meta);
+    if (Object.hasOwn(local.meta || {}, 'tags')) meta.tags = local.meta.tags;
+    else delete meta.tags;
+    savedLocalContent = Object.keys(meta).length
+      ? SDocYaml.serializeFrontMatter(meta) + '\n' + saved.body : saved.body;
+  }
+  const savedDigest = bindings.hash(savedLocalContent);
+  const localUpdated = !localChanged && savedLocalContent !== localContent;
   if (!localChanged) {
-    if (localUpdated) atomicFileWrite(file, savedContent);
+    if (localUpdated) atomicFileWrite(file, savedLocalContent);
     bindings.set(credential.user_id, file, { document_id: document.id,
       revision_id: document.current_revision_id, content_sha256: savedDigest,
       updated_at: document.updated_at });
   }
   bindings.cacheBase(credential.user_id, document.id, document.current_revision_id, savedContent);
   bindings.clearPending(credential.user_id, file);
-  emit(opts, 'cloud.push', { document_id: document.id, base_revision_id: binding.revision_id,
+  return emit(opts, 'cloud.push', { document_id: document.id, base_revision_id: binding.revision_id,
     revision_id: document.current_revision_id, revision_number: document.revision_number,
     tags: document.tags, sha256: savedDigest, no_change: false,
     merge_classification: document.merge_classification || 'clean',
@@ -498,6 +592,64 @@ async function push(opts, client) {
     local_changed_after_upload: localChanged }, 'Pushed revision ' + document.revision_number
       + (localChanged ? '; the local file changed again during upload.'
         : localUpdated ? ' and updated the local file with Cloud changes.' : '.'));
+}
+
+function isMarkdownFile(file) {
+  return /\.(?:md|markdown|mdown|mkd)$/i.test(String(file || ''));
+}
+
+async function addCloudTags(documentId, requestedTags, client, local) {
+  const additions = Array.from(new Set((requestedTags || [])
+    .map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)));
+  if (!additions.length) return null;
+  const current = await client.authenticated('/api/cloud/v1/documents/'
+    + encodeURIComponent(documentId));
+  const existing = current.document && Array.isArray(current.document.tags)
+    ? current.document.tags : [];
+  const tags = Array.from(new Set(existing.concat(additions)));
+  if (tags.length === existing.length && tags.every((tag, index) => tag === existing[index])) {
+    return current.document;
+  }
+  const response = await client.authenticated('/api/cloud/v1/documents/'
+    + encodeURIComponent(documentId) + '/tags', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tags,
+      expected_head_revision_id: current.document.current_revision_id,
+      idempotency_key: crypto.randomUUID() }),
+  });
+  if (local && typeof response.document.markdown === 'string') {
+    const content = fs.readFileSync(local.file, 'utf8');
+    bindings.set(local.credential.user_id, local.file, {
+      document_id: documentId,
+      revision_id: response.document.current_revision_id,
+      content_sha256: bindings.hash(content),
+      updated_at: response.document.updated_at,
+    });
+    bindings.cacheBase(local.credential.user_id, documentId,
+      response.document.current_revision_id, response.document.markdown);
+  }
+  process.stdout.write('Updated Cloud tags for ' + documentId + '.\n');
+  return response.document;
+}
+
+async function autoSyncOpen(opts, dependencies) {
+  if (!opts.file || !isMarkdownFile(opts.file)) return { synced: false };
+  const client = dependencies && dependencies.client || new CloudClient();
+  const accountId = opts.accountFlag || dependencies && dependencies.accountId || null;
+  const file = requireFile(opts.file);
+  const credential = requireCredential(client);
+  const binding = bindings.get(credential.user_id, file);
+  const syncOpts = Object.assign({}, opts, {
+    extra: file,
+    accountFlag: accountId,
+    jsonFlag: false,
+    cloudFirst: true,
+  });
+  const result = binding ? await push(syncOpts, client) : await create(syncOpts, client);
+  const tagged = await addCloudTags(result.document_id, opts.addTags, client,
+    { credential, file });
+  return { synced: true, documentId: result.document_id,
+    revisionId: tagged && tagged.current_revision_id || result.revision_id, created: !binding };
 }
 
 async function history(opts, client) {
@@ -645,5 +797,5 @@ async function runCloudCommand(opts, dependencies) {
   }
 }
 
-module.exports = { CloudClient, CloudCommandError, runCloudCommand, filterTags, origin, EXIT, CLOUD_HELP,
-  entitlementFailure };
+module.exports = { CloudClient, CloudCommandError, runCloudCommand, autoSyncOpen, filterTags, origin,
+  EXIT, CLOUD_HELP, entitlementFailure };
