@@ -76,9 +76,10 @@ test('encrypted fragment personalizes the narrow invitation without exposing det
     examples: [document.querySelector('#examples-details .overview-body'),
       document.querySelector('.example-links')].map(node => Math.round(node.getBoundingClientRect().width)),
   }));
-  expect(expandedWidths.install[0]).toBe(expandedWidths.install[1]);
-  expect(expandedWidths.ways[0]).toBe(expandedWidths.ways[1]);
-  expect(expandedWidths.examples[0]).toBe(expandedWidths.examples[1]);
+  expect(expandedWidths.install[1]).toBe(expandedWidths.ways[1]);
+  expect(expandedWidths.ways[1]).toBe(expandedWidths.examples[1]);
+  expect(expandedWidths.install[1]).toBeLessThan(expandedWidths.install[0]);
+  expect(expandedWidths.install[0] - expandedWidths.install[1]).toBe(24);
 });
 
 test('email code, Terms, profile, and invitation completion stay on one page', async ({ page }) => {
