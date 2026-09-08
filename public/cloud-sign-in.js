@@ -7,6 +7,7 @@
     ? window.location.pathname + window.location.search
     : '/cloud/admin';
   var params = new URLSearchParams(window.location.search);
+  var previewMode = inlineMode && params.get('preview') === 'signin';
 
   function safeReturnPath(value) {
     if (!value || value.charAt(0) !== '/' || value.slice(0, 2) === '//') return DEFAULT_RETURN;
@@ -57,6 +58,10 @@
 
   emailForm.addEventListener('submit', async function (event) {
     event.preventDefault();
+    if (previewMode) {
+      status.textContent = 'This preview does not send a sign-in code.';
+      return;
+    }
     var value = emailInput.value.trim();
     var error = document.getElementById('email-error');
     if (!emailInput.validity.valid || !value) {
