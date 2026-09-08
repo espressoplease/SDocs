@@ -13,7 +13,7 @@ The CLI links here whenever it updates the skill. Each entry shows the exact
 text that was written or replaced, so you can verify the change yourself
 without trusting the tool.
 
-## v20 (CLI 1.19.0)
+## v20 (CLI 1.19.1)
 
 **Reason:** The Cloud edition now treats ordinary sdoc opens as automatic Cloud creates or updates and keeps tags in Cloud.
 

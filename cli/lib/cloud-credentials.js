@@ -111,6 +111,13 @@ function keychainDeleteAccount(account) {
 
 function keychainOperations(operations) {
   if (operations && typeof operations === 'object') return operations;
+  if (typeof operations === 'function') {
+    return {
+      read() { return null; },
+      write(account, value) { keychainWriteAccount(account, value, operations); },
+      remove() {},
+    };
+  }
   return {
     read: keychainReadAccount,
     write(account, value) { keychainWriteAccount(account, value, operations); },
