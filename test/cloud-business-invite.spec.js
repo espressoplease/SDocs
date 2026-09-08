@@ -61,7 +61,8 @@ test('encrypted fragment personalizes the narrow invitation without exposing det
   await page.getByText('Install SmallDocs Cloud', { exact: true }).click();
   await expect(page.locator('.install-command')).toHaveCount(3);
   await expect(page.locator('#install-prompt')).toContainText('use SmallDocs Cloud as the default');
-  await expect(page.locator('#install-prompt')).toContainText('sdoc cloud create');
+  await expect(page.locator('#install-prompt')).toContainText('sdoc FILE.md');
+  await expect(page.locator('#cloud-setup-command')).toHaveText('sdoc setup --cloud --yes');
   await page.getByText('Open a few SmallDocs', { exact: true }).click();
   const exampleLinks = page.locator('.example-link');
   await expect(exampleLinks).toHaveCount(3);
@@ -157,6 +158,10 @@ test('email code, Terms, profile, and invitation completion stay on one page', a
   await expect(page.locator('#install-details')).toHaveAttribute('open', '');
   await expect(page.getByRole('link', { name: 'Open Cloud Library' }))
     .toHaveAttribute('href', '/library?scope=cloud&workspace=workspace-humanlayer');
+  await expect(page.locator('#cloud-setup-command')).toHaveText(
+    'sdoc setup --cloud --account workspace-humanlayer --yes');
+  await expect(page.locator('#install-prompt')).toContainText(
+    'sdoc setup --cloud --account workspace-humanlayer --yes');
   expect(submittedProfile).toEqual({ first_name: 'Dexter', last_name: 'Horthy' });
   expect(page.url()).toBe(initialUrl);
 });
@@ -175,6 +180,7 @@ test('copy install prompt provides the cloud-first setup instructions', async ({
   await expect(page.getByRole('button', { name: 'Copied' })).toBeVisible();
   const copied = await page.evaluate(() => window.__copiedText);
   expect(copied).toContain('sdoc cloud login');
+  expect(copied).toContain('sdoc setup --cloud --yes');
   expect(copied).toContain('use SmallDocs Cloud as the default');
 });
 

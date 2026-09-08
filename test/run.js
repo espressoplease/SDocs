@@ -61,6 +61,7 @@ require('./test-source')(harness);
 require('./test-business-invite-link')(harness);
 require('./test-cloud-auth')(harness);
 require('./test-cloud-billing')(harness);
+require('./test-cloud-manual-access')(harness);
 require('./test-cloud-billing-lifecycle')(harness);
 require('./test-cloud-account-selection')(harness);
 require('./test-cloud-collaboration-metrics')(harness);

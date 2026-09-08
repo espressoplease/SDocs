@@ -592,7 +592,7 @@ module.exports = function(harness) {
         BASE + '/agent-skills/cloud/.well-known/agent-skills/smalldocs/SKILL.md');
       assert.strictEqual(cloudGlobal.status, 200);
       assert.ok(cloudGlobal.body.includes('name: smalldocs'));
-      assert.ok(cloudGlobal.body.includes('This user has enabled SmallDocs Cloud'));
+      assert.ok(cloudGlobal.body.includes('This user has enabled Cloud-first mode'));
       assert.ok(cloudGlobal.body.includes('sdoc cloud status --json'));
 
       const appsReference = await get(
@@ -1169,11 +1169,14 @@ module.exports = function(harness) {
       assert.strictEqual(r.status, 200);
       assert.ok(r.body.includes('Welcome to SmallDocs'));
       assert.ok(r.body.includes('Turn coding-agent work into documents your team can use'));
-      assert.ok(r.body.includes('Trial terms and pricing'));
+      assert.ok(r.body.includes('Your free access'));
+      assert.ok(r.body.includes('We will be in touch'));
+      assert.ok(!r.body.includes('$18'));
       assert.ok(r.body.includes('Accept your invitation'));
       assert.ok(r.body.includes('Install SmallDocs Cloud'));
       assert.ok(r.body.includes('Copy install prompt'));
-      assert.ok(r.body.includes('sdoc cloud create'));
+      assert.ok(r.body.includes('sdoc setup --cloud --yes'));
+      assert.ok(r.body.includes('sdoc FILE.md'));
       assert.ok(r.body.includes('Open a few SmallDocs'));
       assert.ok(r.body.includes('href="/developers"'));
       assert.ok(!r.body.includes('__CLOUD_TERMS_VERSION__'));
