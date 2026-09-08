@@ -93,13 +93,13 @@
   text-decoration: none;
 }
 
-.install-section, .product-story, .example-section, .invite-details {
+.install-section, .product-story, .example-section {
   width: 100%;
-  margin-top: 62px;
+  margin: 0;
 }
-.install-section h2, .product-story h2, .example-section h2 {
+.product-story h2 {
   max-width: 560px;
-  margin-top: 8px;
+  margin-top: 3px;
   font-size: 24px;
   line-height: 1.25;
   letter-spacing: -.028em;
@@ -110,6 +110,7 @@
   font-size: 13px;
   line-height: 1.6;
 }
+.install-section > .section-intro, .example-section > .section-intro { margin-top: 0; }
 
 .install-commands {
   display: grid;
@@ -225,16 +226,6 @@
   border-radius: 12px;
   background: var(--surface-2);
 }
-.value-icon {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 17px;
-  border-radius: 9px;
-  background: var(--surface);
-  color: var(--blue);
-}
 .value-path h3 {
   font-size: 16px;
   font-weight: 600;
@@ -316,16 +307,21 @@
 .example-link:hover > svg { color: var(--blue); }
 .github-link { margin-top: 15px; }
 
-.invite-details { display: grid; gap: 7px; }
-.invite-details details {
+.invite-overview {
+  width: 100%;
+  display: grid;
+  gap: 7px;
+  margin-top: 52px;
+}
+.invite-overview details {
   border: 0;
   border-radius: 10px;
   background: var(--surface-2);
   transition: background .15s;
 }
-.invite-details details:hover { background: color-mix(in srgb, var(--surface-2) 75%, var(--border)); }
-.invite-details details[open], .invite-details details[open]:hover { background: var(--surface-2); }
-.invite-details summary {
+.invite-overview details:hover { background: color-mix(in srgb, var(--surface-2) 75%, var(--border)); }
+.invite-overview details[open], .invite-overview details[open]:hover { background: var(--surface-2); }
+.invite-overview summary {
   min-height: 49px;
   display: flex;
   align-items: center;
@@ -337,16 +333,16 @@
   font-weight: 400;
   cursor: pointer;
 }
-.invite-details summary::-webkit-details-marker { display: none; }
-.invite-details summary svg {
+.invite-overview summary::-webkit-details-marker { display: none; }
+.invite-overview summary svg {
   margin-left: auto;
   flex: 0 0 auto;
   color: var(--text-3);
   transition: transform .2s ease;
 }
-.invite-details details[open] summary svg { transform: rotate(90deg); }
-.invite-details summary:hover { color: var(--text); }
-.details-body { padding: 2px 16px 18px; }
+.invite-overview details[open] summary svg { transform: rotate(90deg); }
+.invite-overview summary:hover { color: var(--text); }
+.details-body, .overview-body { padding: 2px 16px 18px; }
 .details-body > p {
   color: var(--text-2);
   font-size: 12px;
@@ -366,8 +362,8 @@
   .invite-intro h1 { font-size: 31px; }
   .invite-intro > p:last-child { margin-top: 13px; font-size: 14px; }
   .business-auth-card { padding: 20px; }
-  .install-section, .product-story, .example-section, .invite-details { margin-top: 48px; }
-  .install-section h2, .product-story h2, .example-section h2 { font-size: 21px; }
+  .invite-overview { margin-top: 42px; }
+  .product-story h2 { font-size: 21px; }
   .value-path { padding: 19px; }
   .example-link { padding: 14px; }
   .install-command { grid-template-columns: 25px minmax(0, 1fr) 32px; gap: 9px; padding: 14px 12px; }

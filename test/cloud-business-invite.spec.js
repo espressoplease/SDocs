@@ -35,18 +35,16 @@ test('encrypted fragment personalizes the narrow invitation without exposing det
   await expect(page.getByLabel('Email address')).toHaveValue('dexter@humanlayer.dev');
   await expect(page.locator('#invite-accept')).toBeHidden();
   await expect(page.locator('.preview-note')).toContainText('does not create an account');
-  await expect(page.getByRole('heading', { name: 'Build SmallDocs into HumanLayer' })).toBeVisible();
   expect(new URL(page.url()).search).not.toContain('Dexter');
   expect(new URL(page.url()).search).not.toContain('humanlayer');
 
   const measurements = await page.evaluate(() => ({
     overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    widths: ['.invite-intro', '.business-auth-card', '.install-section', '.product-story',
-      '.example-section', '.invite-details'].map(selector =>
+    widths: ['.invite-intro', '.business-auth-card', '.invite-overview'].map(selector =>
       Math.round(document.querySelector(selector).getBoundingClientRect().width)),
-    openSections: Array.from(document.querySelectorAll('.invite-details details'))
+    openSections: Array.from(document.querySelectorAll('.invite-overview > details'))
       .filter(section => section.open).length,
-    detailBorder: getComputedStyle(document.querySelector('.invite-details details')).borderTopWidth,
+    detailBorder: getComputedStyle(document.querySelector('.invite-overview details')).borderTopWidth,
     authBorder: getComputedStyle(document.querySelector('.business-auth-card')).borderTopWidth,
   }));
   expect(measurements.overflow).toBe(false);
@@ -55,9 +53,14 @@ test('encrypted fragment personalizes the narrow invitation without exposing det
   expect(measurements.detailBorder).toBe('0px');
   expect(measurements.authBorder).toBe('1px');
 
+  await page.getByText('Two ways to use SmallDocs', { exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Build SmallDocs into HumanLayer' })).toBeVisible();
+  await expect(page.locator('.value-icon')).toHaveCount(0);
+  await page.getByText('Install SmallDocs Cloud', { exact: true }).click();
   await expect(page.locator('.install-command')).toHaveCount(3);
   await expect(page.locator('#install-prompt')).toContainText('use SmallDocs Cloud as the default');
   await expect(page.locator('#install-prompt')).toContainText('sdoc cloud create');
+  await page.getByText('Open a few SmallDocs', { exact: true }).click();
   const exampleLinks = page.locator('.example-link');
   await expect(exampleLinks).toHaveCount(3);
   for (let index = 0; index < 3; index += 1) {
@@ -137,6 +140,7 @@ test('email code, Terms, profile, and invitation completion stay on one page', a
 
   await page.getByRole('button', { name: 'Accept invitation' }).click();
   await expect(page.getByRole('heading', { name: 'Your workspace is ready' })).toBeVisible();
+  await expect(page.locator('#install-details')).toHaveAttribute('open', '');
   await expect(page.getByRole('link', { name: 'Open Cloud Library' }))
     .toHaveAttribute('href', '/library?scope=cloud&workspace=workspace-humanlayer');
   expect(submittedProfile).toEqual({ first_name: 'Dexter', last_name: 'Horthy' });
@@ -152,6 +156,7 @@ test('copy install prompt provides the cloud-first setup instructions', async ({
     });
   });
   await page.goto(invitePath({ preview: 'signin' }));
+  await page.getByText('Install SmallDocs Cloud', { exact: true }).click();
   await page.getByRole('button', { name: 'Copy install prompt' }).click();
   await expect(page.getByRole('button', { name: 'Copied' })).toBeVisible();
   const copied = await page.evaluate(() => window.__copiedText);
@@ -166,8 +171,7 @@ test('Business invitation remains narrow without mobile overflow', async ({ page
 
   const result = await page.evaluate(() => ({
     overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    widths: ['.invite-intro', '.business-auth-card', '.install-section', '.product-story',
-      '.example-section', '.invite-details'].map(selector =>
+    widths: ['.invite-intro', '.business-auth-card', '.invite-overview'].map(selector =>
       Math.round(document.querySelector(selector).getBoundingClientRect().width)),
   }));
   expect(result.overflow).toBe(false);
