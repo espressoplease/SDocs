@@ -592,7 +592,7 @@ module.exports = function(harness) {
         BASE + '/agent-skills/cloud/.well-known/agent-skills/smalldocs/SKILL.md');
       assert.strictEqual(cloudGlobal.status, 200);
       assert.ok(cloudGlobal.body.includes('name: smalldocs'));
-      assert.ok(cloudGlobal.body.includes('This user has enabled SmallDocs Cloud'));
+      assert.ok(cloudGlobal.body.includes('This user has enabled Cloud-first mode'));
       assert.ok(cloudGlobal.body.includes('sdoc cloud status --json'));
 
       const appsReference = await get(
@@ -1164,6 +1164,36 @@ module.exports = function(harness) {
       await assertEveryAssetVersioned('/cloud/sign-in', v);
     });
 
+    await testAsync('GET /cloud/business-invite serves the private invitation page', async () => {
+      const r = await get(BASE + '/cloud/business-invite?preview=signin');
+      assert.strictEqual(r.status, 200);
+      assert.ok(r.body.includes('Welcome to SmallDocs'));
+      assert.ok(r.body.includes('Turn coding-agent work into documents your team can use'));
+      assert.ok(r.body.includes('Your free access'));
+      assert.ok(r.body.includes('We will be in touch'));
+      assert.ok(!r.body.includes('$18'));
+      assert.ok(r.body.includes('Accept your invitation'));
+      assert.ok(r.body.includes('Install SmallDocs Cloud'));
+      assert.ok(r.body.includes('Copy install prompt'));
+      assert.ok(r.body.includes('sdoc setup --cloud --yes'));
+      assert.ok(r.body.includes('sdoc FILE.md'));
+      assert.ok(r.body.includes('Open a few SmallDocs'));
+      assert.ok(r.body.includes('href="/developers"'));
+      assert.ok(!r.body.includes('__CLOUD_TERMS_VERSION__'));
+      assert.ok(!r.body.includes('__CLOUD_TERMS_LABEL__'));
+      assert.ok(r.body.includes('<a class="provider-button provider-link" data-provider="google"'));
+      assert.ok(r.body.includes('<a hidden class="provider-button provider-link" data-provider="github"'));
+      assert.strictEqual(r.headers['cache-control'], 'no-store');
+      assert.strictEqual(r.headers['x-robots-tag'], 'noindex, nofollow');
+      assert.strictEqual(r.headers['x-frame-options'], 'DENY');
+      assert.ok(r.headers['content-security-policy'].includes("default-src 'none'"));
+    });
+
+    await testAsync('asset-versioning: /cloud/business-invite is versioned', async () => {
+      const v = JSON.parse((await get(BASE + '/version-check')).body).version;
+      await assertEveryAssetVersioned('/cloud/business-invite?preview=signin', v);
+    });
+
     let googleOAuthState;
     let googleOAuthCookie;
     await testAsync('configured Google OAuth start redirects with state, nonce, and PKCE', async () => {
@@ -1669,11 +1699,31 @@ module.exports = function(harness) {
     });
 
     await testAsync('Cloud invitation is email-bound, grants projects, and is single-use', async () => {
+      const Database = require('better-sqlite3');
+      const queuedInvitationJobs = () => {
+        const jobs = new Database(testCloudJobsDbPath, { readonly: true });
+        const count = jobs.prepare(`
+          SELECT COUNT(*) AS count FROM cloud_jobs WHERE type = 'invitation_email'
+        `).get().count;
+        jobs.close();
+        return count;
+      };
+      const jobsBeforeQuietInvite = queuedInvitationJobs();
+      const quietInvite = await post(BASE + '/api/cloud/v1/workspaces/' +
+        cloudTeamWorkspace.workspaceId + '/invitations', {
+        email: 'quiet-member@example.com', role: 'member', send_email: false,
+        project_grants: [{ projectId: cloudTeamProject.id, role: 'editor' }],
+      }, { Origin: BASE, Cookie: cloudCookie });
+      assert.strictEqual(quietInvite.status, 201);
+      assert.strictEqual(JSON.parse(quietInvite.body).invitation.notification_scheduled, false);
+      assert.strictEqual(queuedInvitationJobs(), jobsBeforeQuietInvite);
+
       const invited = await post(BASE + '/api/cloud/v1/workspaces/' + cloudTeamWorkspace.workspaceId + '/invitations', {
         email: 'team-member@example.com', role: 'member',
         project_grants: [{ projectId: cloudTeamProject.id, role: 'editor' }],
       }, { Origin: BASE, Cookie: cloudCookie });
       assert.strictEqual(invited.status, 201);
+      assert.strictEqual(JSON.parse(invited.body).invitation.notification_scheduled, true);
       const acceptUrl = JSON.parse(invited.body).invitation.accept_url;
       const token = new URL(acceptUrl).searchParams.get('token');
       assert.ok(token);
